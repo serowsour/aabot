@@ -2,275 +2,224 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMod Dashboard</title>
+    <title>Win10 Mod Station</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
     <style>
-        /* Stile Scrollbar "Invisibile" ma funzionale */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #000; overflow: hidden; }
+        .win-taskbar { background: rgba(16, 16, 16, 0.9); backdrop-filter: blur(10px); }
+        .win-border { border: 1px solid #333; }
+        .hidden { display: none !important; }
+        /* Scrollbar stile Windows 10 */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #18181b; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #71717a; }
-        body { background-color: #09090b; color: #e4e4e7; }
-        .btn-action { transition: all 0.1s; }
-        .btn-action:active { transform: scale(0.95); }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #444; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col overflow-hidden font-sans">
+<body class="h-screen w-screen flex flex-col text-white">
 
-    <header class="h-12 bg-[#18181b] border-b border-[#27272a] flex items-center justify-between px-4">
-        <div class="flex items-center gap-3">
-            <div id="status-dot" class="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.5)]"></div>
-            <h1 class="font-bold text-lg tracking-tight text-purple-500">PRO<span class="text-white">MOD</span> PANEL</h1>
+    <div class="h-10 win-taskbar border-b border-[#333] flex justify-between items-center px-4 z-50">
+        <div class="flex items-center gap-4">
+            <span class="text-purple-500 font-bold">AABOT OS</span>
+            <div id="user-info" class="hidden flex items-center gap-2 border-l border-[#444] pl-4">
+                <img id="user-avatar" src="" class="w-6 h-6 rounded-full border border-purple-500">
+                <span id="user-name" class="text-xs font-semibold"></span>
+                <button onclick="logout()" class="text-[10px] bg-red-900/40 hover:bg-red-600 px-2 py-0.5 rounded transition">LOGOUT</button>
+            </div>
         </div>
-        <div class="flex gap-2">
-            <span id="debug-msg" class="text-xs text-gray-500 font-mono self-center mr-4">In attesa di login...</span>
-            <button id="login-btn" onclick="startLogin()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded text-sm font-bold shadow-lg shadow-purple-900/20 transition-all">
-                CONNETTI TWITCH
-            </button>
-        </div>
-    </header>
+        <div id="status-bar" class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Sistema Offline</div>
+    </div>
 
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden p-2 gap-2 bg-[#111]">
         
-        <div class="flex-1 flex flex-col border-r border-[#27272a] bg-black">
-            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-1 text-sm font-medium">
-                <div class="text-gray-600 italic text-center mt-20">
-                    Clicca "Connetti Twitch" per caricare la chat.
-                </div>
-            </div>
-            <div class="p-3 bg-[#18181b] border-t border-[#27272a]">
-                <input type="text" id="chat-input" placeholder="Scrivi un messaggio o un comando..." 
-                    class="w-full bg-[#27272a] text-white border border-[#3f3f46] rounded p-2 text-sm focus:outline-none focus:border-purple-500 transition-colors">
+        <div id="login-screen" class="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center backdrop-blur-md">
+            <div class="bg-[#1f1f1f] p-8 win-border text-center shadow-2xl rounded-sm">
+                <h2 class="text-2xl font-light mb-6">Benvenuto in <span class="text-purple-500">AA-Bot</span></h2>
+                <button onclick="login()" class="bg-[#0078d7] hover:bg-[#198ce6] text-white px-10 py-3 font-semibold transition shadow-lg">
+                    ACCEDI CON TWITCH
+                </button>
             </div>
         </div>
 
-        <div class="w-80 bg-[#18181b] flex flex-col overflow-y-auto">
-            
-            <div class="p-4 border-b border-[#27272a]">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Controllo Folla</h3>
+        <div class="flex-[2] flex flex-col gap-2">
+            <div id="stream-container" class="bg-black win-border aspect-video">
+                <div id="twitch-embed" class="w-full h-full flex items-center justify-center text-gray-700 italic">
+                    Inserisci un canale per vedere la stream
+                </div>
+            </div>
+            <div class="flex-1 bg-[#181818] win-border flex flex-col overflow-hidden">
+                <div class="p-2 bg-[#252525] text-[10px] font-bold border-b border-[#333] flex justify-between">
+                    <span>LIVE CHAT MONITOR</span>
+                    <span id="mod-indicator" class="text-red-500">MODALITÀ SOLA LETTURA</span>
+                </div>
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 text-sm font-mono space-y-1"></div>
+                <div class="p-2 bg-[#1f1f1f] border-t border-[#333]">
+                    <input type="text" id="chat-input" placeholder="Messaggio..." class="w-full bg-[#333] border border-[#444] p-2 text-sm focus:outline-none focus:border-[#0078d7]">
+                </div>
+            </div>
+        </div>
+
+        <div id="mod-panel" class="w-80 flex flex-col gap-2">
+            <div class="bg-[#252525] win-border p-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-tighter">Azioni Rapide</h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="send('/clear')" class="btn-action bg-slate-800 hover:bg-slate-700 p-2 rounded text-xs font-bold border border-slate-700">🧹 CLEAR CHAT</button>
-                    <button onclick="send('/slow 10')" class="btn-action bg-slate-800 hover:bg-slate-700 p-2 rounded text-xs font-bold border border-slate-700">🐢 SLOW 10s</button>
-                    <button onclick="send('/emoteonly')" class="btn-action bg-slate-800 hover:bg-slate-700 p-2 rounded text-xs font-bold border border-slate-700">😊 EMOTE ONLY</button>
-                    <button onclick="send('/followers 10m')" class="btn-action bg-slate-800 hover:bg-slate-700 p-2 rounded text-xs font-bold border border-slate-700">👥 FOLLOW 10m</button>
+                    <button onclick="quickCmd('/clear')" class="bg-[#333] hover:bg-[#444] p-2 text-[10px] font-bold win-border uppercase">Clear</button>
+                    <button onclick="quickCmd('/subsonly')" class="bg-[#333] hover:bg-[#444] p-2 text-[10px] font-bold win-border uppercase">Sub Only</button>
+                    <button onclick="quickCmd('/emoteonly')" class="bg-[#333] hover:bg-[#444] p-2 text-[10px] font-bold win-border uppercase">Emote Only</button>
+                    <button onclick="quickCmd('/slow 10')" class="bg-[#333] hover:bg-[#444] p-2 text-[10px] font-bold win-border uppercase">Slow 10s</button>
                 </div>
             </div>
 
-            <div class="p-4 border-b border-[#27272a] bg-red-900/10">
-                <h3 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">⛔ EMERGENCY</h3>
-                <button onclick="toggleShield()" id="btn-shield" class="w-full btn-action bg-red-600 hover:bg-red-500 text-white p-4 rounded font-bold shadow-lg shadow-red-900/30 border border-red-500 flex flex-col items-center gap-1">
-                    <span class="text-lg">ATTIVA SHIELD</span>
-                    <span class="text-[10px] opacity-80 font-normal">Sub-only + Slow + Clear</span>
-                </button>
-                <button onclick="disableShield()" class="w-full mt-2 btn-action bg-green-700 hover:bg-green-600 text-white p-2 rounded text-xs font-bold border border-green-500">
-                    DISATTIVA E RIPRISTINA
-                </button>
-            </div>
-
-            <div class="p-4 flex-1">
-                <h3 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-3">Comandi Bot</h3>
-                <div id="cmd-list" class="space-y-2 text-xs"></div>
-                <div class="mt-4 p-3 bg-[#27272a] rounded border border-[#3f3f46]">
-                    <p class="text-[10px] text-gray-400 mb-1">Aggiungi nuovo comando:</p>
-                    <code class="text-green-400 text-[10px]">!add !social Seguimi su IG!</code>
+            <div class="bg-[#252525] win-border p-4 flex-1 overflow-hidden flex flex-col">
+                <h3 class="text-xs font-bold text-red-500 uppercase mb-4 tracking-tighter">Protezione Shield</h3>
+                <button onclick="activateShield()" class="w-full bg-red-700 hover:bg-red-600 p-4 font-bold text-sm mb-4">SHIELD MODE ON</button>
+                
+                <h3 class="text-xs font-bold text-gray-400 uppercase mb-2 tracking-tighter">Comandi Bot</h3>
+                <div id="bot-cmds" class="flex-1 overflow-y-auto space-y-2 text-xs text-purple-300 italic"></div>
+                <div class="mt-2 text-[9px] text-gray-500 bg-black/20 p-2 border border-white/5">
+                    Usa <span class="text-white">!add !nome testo</span> per aggiungere.
                 </div>
             </div>
-
         </div>
+
     </div>
 
     <script>
-        // --- CONFIGURAZIONE ---
-        const CLIENT_ID = 'uqf5d6at2fnet8w5tylz17l2sb4onx'; 
-        const REDIRECT_URI = 'https://serowsour.github.io/aabot/'; 
+        const CLIENT_ID = 'uqf5d6at2fnet8w5tylz17l2sb4onx';
+        const REDIRECT_URI = 'https://serowsour.github.io/aabot/';
         
-        // --- VARIABILI ---
         let client;
-        let savedCmds = JSON.parse(localStorage.getItem('proMod_cmds')) || {};
+        let userData = {};
+        let currentChannel = '';
+        let commands = JSON.parse(localStorage.getItem('aa_cmds')) || {};
 
-        // --- SISTEMA DI LOGIN ---
-        function startLogin() {
-            log("Avvio login...");
-            const scope = 'chat:read chat:edit channel:moderate';
-            const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scope)}`;
-            window.location.href = authUrl;
+        function login() {
+            const scope = 'chat:read chat:edit channel:moderate user:read:email';
+            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scope)}`;
         }
 
-        // Controllo al caricamento della pagina
-        window.onload = () => {
+        function logout() {
+            localStorage.removeItem('twitch_token');
+            window.location.href = REDIRECT_URI;
+        }
+
+        window.onload = async () => {
             const hash = window.location.hash;
-            if (hash.includes('access_token')) {
-                const token = new URLSearchParams(hash.substring(1)).get('access_token');
-                if (token) {
-                    // Puliamo l'URL per estetica
-                    window.history.pushState({}, document.title, window.location.pathname);
-                    const channel = prompt("Inserisci il nome del canale (tutto minuscolo):");
-                    if (channel) connectBot(token, channel.toLowerCase());
-                }
-            } else {
-                // Controllo se l'URI corrente corrisponde a quello impostato
-                if(window.location.href !== REDIRECT_URI && !window.location.href.includes('127.0.0.1')) {
-                   // log("⚠️ ATTENZIONE: L'URL nella barra non corrisponde esattamente al Redirect URI.");
-                }
+            let token = localStorage.getItem('twitch_token');
+
+            if (hash) {
+                token = new URLSearchParams(hash.substring(1)).get('access_token');
+                localStorage.setItem('twitch_token', token);
+                window.history.pushState({}, document.title, window.location.pathname);
             }
-            renderCmds();
+
+            if (token) {
+                document.getElementById('login-screen').classList.add('hidden');
+                await fetchUserData(token);
+                const chan = prompt("A quale canale vuoi connetterti?");
+                if(chan) initApp(token, chan.toLowerCase());
+            }
         };
 
-        // --- CONNESSIONE TMI.JS ---
-        function connectBot(token, channel) {
-            log(`Connessione a ${channel}...`);
+        async function fetchUserData(token) {
+            const resp = await fetch('https://api.twitch.tv/helix/users', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Client-ID': CLIENT_ID }
+            });
+            const data = await resp.json();
+            userData = data.data[0];
             
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-avatar').src = userData.profile_image_url;
+            document.getElementById('user-name').innerText = userData.display_name;
+        }
+
+        function initApp(token, channel) {
+            currentChannel = channel;
+            
+            // Embed Stream
+            document.getElementById('twitch-embed').innerHTML = `<iframe src="https://player.twitch.tv/?channel=${channel}&parent=serowsour.github.io" height="100%" width="100%" allowfullscreen="true"></iframe>`;
+
             client = new tmi.Client({
-                options: { debug: true },
-                connection: { secure: true, reconnect: true },
-                identity: { username: channel, password: `oauth:${token}` },
+                identity: { username: userData.login, password: `oauth:${token}` },
                 channels: [channel]
             });
 
-            client.connect()
-                .then(() => {
-                    document.getElementById('status-dot').className = "w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
-                    document.getElementById('login-btn').innerText = `CONNESSO: ${channel.toUpperCase()}`;
-                    document.getElementById('login-btn').classList.add('bg-gray-700', 'cursor-default');
-                    document.getElementById('chat-box').innerHTML = ''; // Pulisce il messaggio di benvenuto
-                    addSystemMsg(`✅ Connesso con successo al canale ${channel}.`);
-                })
-                .catch(err => {
-                    log("ERRORE CONNESSIONE: " + err);
-                    alert("Impossibile connettersi. Controlla la console (F12) per i dettagli.");
-                });
+            client.connect().then(() => {
+                document.getElementById('status-bar').innerText = `CONNESSO A: ${channel}`;
+                document.getElementById('status-bar').classList.replace('text-gray-500', 'text-green-500');
+            });
 
-            // GESTIONE MESSAGGI
-            client.on('message', (chan, tags, message, self) => {
-                if (self) return;
+            client.on('message', (chan, tags, msg, self) => {
+                // Riconoscimento Mod Automatico (Broadcaster o Mod)
+                const isMod = tags.mod || tags.badges?.broadcaster === '1';
+                
+                // Se sono io (l'utente loggato) e sono mod, abilito il pannello
+                if (tags.username === userData.login) {
+                    if (isMod) {
+                        document.getElementById('mod-panel').classList.remove('hidden');
+                        document.getElementById('mod-indicator').innerText = "MODALITÀ MODERATORE ATTIVA";
+                        document.getElementById('mod-indicator').classList.replace('text-red-500', 'text-green-500');
+                    } else {
+                        document.getElementById('mod-panel').classList.add('hidden');
+                    }
+                }
 
-                // Renderizza il messaggio
-                renderMessage(tags, message);
-
-                // Gestione Comandi (!add, ecc.)
-                handleCommands(chan, tags, message);
+                renderChat(tags, msg);
+                handleBot(tags, msg, isMod);
             });
         }
 
-        // --- FUNZIONI CHAT & UI ---
-        function renderMessage(tags, msg) {
-            const chat = document.getElementById('chat-box');
+        function renderChat(tags, msg) {
+            const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
-            const color = tags.color || '#a855f7'; // Colore default viola
-            
-            div.className = "hover:bg-[#18181b] px-2 py-1 -mx-2 rounded cursor-pointer group";
-            div.innerHTML = `
-                <span class="text-[10px] text-gray-500 mr-1">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                <span style="color:${color}" class="font-bold cursor-pointer hover:underline" onclick="pasteUser('${tags.username}')">${tags['display-name']}</span>: 
-                <span class="text-gray-300 group-hover:text-white transition-colors">${msg}</span>
-            `;
-            
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
+            div.innerHTML = `<span style="color:${tags.color || '#9146ff'}"><strong>${tags['display-name']}</strong></span>: ${msg}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function addSystemMsg(msg) {
-            const chat = document.getElementById('chat-box');
-            chat.innerHTML += `<div class="px-2 py-1 text-xs text-yellow-500 font-mono border-l-2 border-yellow-600 bg-yellow-900/10 mb-1">${msg}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function pasteUser(user) {
-            const input = document.getElementById('chat-input');
-            input.value = `@${user} ` + input.value;
-            input.focus();
-        }
-
-        // --- LOGICA BOT ---
-        function handleCommands(chan, tags, msg) {
+        function handleBot(tags, msg, isMod) {
             const args = msg.split(' ');
             const cmd = args[0].toLowerCase();
-            const isMod = tags.mod || tags.badges?.broadcaster;
 
-            // 1. Aggiungi comando (!add !ciao Risposta)
             if (cmd === '!add' && isMod) {
-                if (args[1] && args[2]) {
-                    const newCmdName = args[1].startsWith('!') ? args[1] : '!' + args[1];
-                    const response = args.slice(2).join(' ');
-                    savedCmds[newCmdName] = response;
-                    localStorage.setItem('proMod_cmds', JSON.stringify(savedCmds));
-                    renderCmds();
-                    client.say(chan, `💾 Comando ${newCmdName} salvato.`);
+                if(args[1] && args[2]) {
+                    commands[args[1]] = args.slice(2).join(' ');
+                    localStorage.setItem('aa_cmds', JSON.stringify(commands));
+                    client.say(currentChannel, `✅ Comando ${args[1]} aggiunto.`);
+                    updateCmdList();
                 }
             }
 
-            // 2. Esegui comando salvato
-            if (savedCmds[cmd]) {
-                client.say(chan, savedCmds[cmd]);
-            }
+            if (commands[cmd]) client.say(currentChannel, commands[cmd]);
         }
 
-        function renderCmds() {
-            const list = document.getElementById('cmd-list');
-            list.innerHTML = Object.keys(savedCmds).map(k => `
-                <div class="flex justify-between items-center bg-[#18181b] p-2 rounded border border-[#27272a] group hover:border-purple-500 transition-colors">
-                    <span class="font-bold text-gray-300">${k}</span>
-                    <button onclick="delCmd('${k}')" class="text-red-500 opacity-0 group-hover:opacity-100 font-bold px-2 hover:bg-red-900/30 rounded">✕</button>
-                </div>
-            `).join('');
+        function updateCmdList() {
+            const list = document.getElementById('bot-cmds');
+            list.innerHTML = Object.keys(commands).map(c => `<div>${c}</div>`).join('');
         }
 
-        function delCmd(k) {
-            delete savedCmds[k];
-            localStorage.setItem('proMod_cmds', JSON.stringify(savedCmds));
-            renderCmds();
+        function quickCmd(cmd) {
+            if(client) client.say(currentChannel, cmd);
         }
 
-        // --- AZIONI MODERATORE ---
-        function send(cmd) {
-            if (client) client.say(client.getChannels()[0], cmd);
-            else alert("Non sei connesso!");
+        function activateShield() {
+            if(!client) return;
+            client.say(currentChannel, "/clear");
+            client.say(currentChannel, "/subsonly");
+            client.say(currentChannel, "/slow 10");
+            alert("⚠️ SHIELD ATTIVATO: Chat protetta.");
         }
 
-        function toggleShield() {
-            if (!client) return;
-            const chan = client.getChannels()[0];
-            // Sequenza di protezione
-            client.say(chan, '/clear');
-            client.say(chan, '/subsonly');
-            client.say(chan, '/slow 20');
-            client.say(chan, '/followers 30m'); // Follower da almeno 30 min
-            
-            const btn = document.getElementById('btn-shield');
-            btn.classList.replace('bg-red-600', 'bg-white');
-            btn.classList.replace('text-white', 'text-red-600');
-            btn.querySelector('span').innerText = "SHIELD ATTIVO";
-            addSystemMsg("🛡️ SHIELD MODE ATTIVATA: Chat bloccata.");
-        }
-
-        function disableShield() {
-            if (!client) return;
-            const chan = client.getChannels()[0];
-            client.say(chan, '/subsonlyoff');
-            client.say(chan, '/slowoff');
-            client.say(chan, '/followersoff');
-            
-            const btn = document.getElementById('btn-shield');
-            btn.classList.replace('bg-white', 'bg-red-600');
-            btn.classList.replace('text-red-600', 'text-white');
-            btn.querySelector('span').innerText = "ATTIVA SHIELD";
-            addSystemMsg("✅ Allarme rientrato. Chat sbloccata.");
-        }
-
-        // Gestione Input Chat
+        // Input Invio
         document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && client) {
-                client.say(client.getChannels()[0], e.target.value);
+            if(e.key === 'Enter' && client) {
+                client.say(currentChannel, e.target.value);
                 e.target.value = '';
             }
         });
-
-        function log(txt) {
-            document.getElementById('debug-msg').innerText = txt;
-            console.log(txt);
-        }
+        
+        updateCmdList();
     </script>
 </body>
 </html>
