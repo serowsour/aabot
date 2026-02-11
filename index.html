@@ -3,43 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AA-BOT Moderazione</title>
+    <title>AA-BOT Moderation</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/dist/tmi.min.js"></script>
+    <script src="https://bundle.run/tmi.js@1.8.5"></script>
 </head>
 <body class="bg-[#0e0e10] text-white font-sans p-4 min-h-screen flex items-center justify-center">
 
     <div class="w-full max-w-5xl bg-[#18181b] rounded-lg border border-[#2f2f35] flex flex-col h-[85vh] shadow-2xl overflow-hidden">
-        
         <div class="p-4 border-b border-[#2f2f35] flex justify-between items-center bg-[#1f1f23]">
             <div class="flex items-center gap-2">
                 <div id="status-led" class="w-3 h-3 bg-red-600 rounded-full"></div>
-                <h1 class="font-black text-sm tracking-widest uppercase">AA-BOT MODERATOR</h1>
+                <h1 class="font-black text-xs tracking-widest uppercase text-purple-500">AA-BOT // MOD PANEL</h1>
             </div>
-            <button onclick="startLogin()" id="authBtn" class="bg-[#9146ff] hover:bg-[#772ce8] px-4 py-2 rounded text-xs font-bold transition">
-                COLLEGA TWITCH
+            <button onclick="startLogin()" id="authBtn" class="bg-[#9146ff] hover:bg-[#772ce8] px-4 py-2 rounded text-[10px] font-bold transition uppercase">
+                Collega Account
             </button>
         </div>
 
         <div class="flex flex-1 overflow-hidden">
             <div class="flex-1 flex flex-col p-4 border-r border-[#2f2f35]">
-                <div id="chat-stream" class="flex-1 overflow-y-auto space-y-1 text-sm font-mono p-2 bg-black/20 rounded">
-                    <p class="text-gray-600">// Sistema pronto. Clicca su Collega Twitch.</p>
+                <div id="chat-stream" class="flex-1 overflow-y-auto space-y-1 text-xs font-mono p-2 bg-black/20 rounded">
+                    <p class="text-gray-600">// Sistema pronto. Clicca su Collega.</p>
                 </div>
                 
                 <div class="mt-4 flex gap-2">
-                    <button onclick="quickAction('/subsonly')" class="flex-1 bg-red-900/30 border border-red-600 text-red-500 p-2 rounded text-[10px] font-bold uppercase hover:bg-red-600 hover:text-white transition">Anti-Raid ON</button>
-                    <button onclick="quickAction('/subsonlyoff')" class="flex-1 bg-slate-800 border border-slate-600 p-2 rounded text-[10px] font-bold uppercase">Anti-Raid OFF</button>
-                    <button onclick="quickAction('/clear')" class="flex-1 bg-slate-800 border border-slate-600 p-2 rounded text-[10px] font-bold uppercase">Svuota Chat</button>
+                    <button onclick="quickAction('/subsonly')" class="flex-1 bg-red-900/20 border border-red-600 text-red-500 p-2 rounded text-[9px] font-bold uppercase">Anti-Raid ON</button>
+                    <button onclick="quickAction('/subsonlyoff')" class="flex-1 bg-slate-800 border border-slate-600 p-2 rounded text-[9px] font-bold uppercase">OFF</button>
+                    <button onclick="quickAction('/clear')" class="flex-1 bg-slate-800 border border-slate-600 p-2 rounded text-[9px] font-bold uppercase">Clear</button>
                 </div>
             </div>
 
-            <div class="w-72 bg-[#1f1f23] p-4 flex flex-col">
-                <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-4 tracking-widest border-b border-gray-800 pb-2">Comandi Salvati</h3>
-                <div id="cmd-list" class="flex-1 overflow-y-auto space-y-2">
-                    </div>
-                <div class="mt-4 text-[9px] text-gray-500 italic bg-black/20 p-2 rounded">
-                    Usa <span class="text-purple-400">!add !comando testo</span> in chat per aggiungere risposte automatiche.
+            <div class="w-64 bg-[#1f1f23] p-4 flex flex-col">
+                <h3 class="text-[9px] font-bold text-gray-500 uppercase mb-4 tracking-widest">Bot Commands</h3>
+                <div id="cmd-list" class="flex-1 overflow-y-auto space-y-2"></div>
+                <div class="mt-4 text-[9px] text-gray-600 leading-tight">
+                    In chat: <span class="text-purple-400">!add !cmd testo</span>
                 </div>
             </div>
         </div>
@@ -50,111 +48,83 @@
         const REDIRECT_URI = 'https://serowsour.github.io/aabot/';
         
         let client;
-        let dynamicCommands = JSON.parse(localStorage.getItem('aaBot_cmds')) || {};
+        let dynamicCommands = JSON.parse(localStorage.getItem('aa_cmds')) || {};
 
-        // Inizio Login
         function startLogin() {
-            const scope = encodeURIComponent('chat:read chat:edit channel:moderate');
-            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${scope}`;
+            const scope = 'chat:read chat:edit channel:moderate';
+            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(scope)}`;
         }
 
-        // Controllo se sono tornato dal login
-        window.onload = () => {
+        window.onload = function() {
             const hash = window.location.hash;
             if (hash) {
-                const params = new URLSearchParams(hash.substring(1));
-                const token = params.get('access_token');
+                const token = new URLSearchParams(hash.substring(1)).get('access_token');
                 if (token) {
-                    const channel = prompt("Inserisci il nome del tuo canale Twitch:");
-                    if(channel) connectToTwitch(token, channel.toLowerCase());
+                    const channel = prompt("Nome del tuo canale Twitch:");
+                    if(channel) connect(token, channel.toLowerCase());
                 }
             }
-            updateCmdUI();
+            renderCmds();
         };
 
-        function connectToTwitch(token, channel) {
+        function connect(token, chan) {
+            // Utilizzo tmi caricato tramite bundle.run
             client = new tmi.Client({
-                identity: { username: channel, password: `oauth:${token}` },
-                channels: [channel]
+                identity: { username: chan, password: `oauth:${token}` },
+                channels: [chan]
             });
 
             client.connect().then(() => {
-                document.getElementById('status-led').classList.replace('bg-red-600', 'bg-green-500');
-                document.getElementById('authBtn').innerText = `CANALE: ${channel.toUpperCase()}`;
-                document.getElementById('authBtn').classList.add('opacity-50', 'pointer-events-none');
-                addLog(`Connesso a ${channel}`);
-            }).catch(console.error);
+                document.getElementById('status-led').style.backgroundColor = '#22c55e';
+                document.getElementById('authBtn').innerText = "LIVE: " + chan;
+                document.getElementById('chat-stream').innerHTML += `<p class="text-green-500 italic">// Connesso con successo.</p>`;
+            }).catch(e => alert("Errore connessione: " + e));
 
-            client.on('message', (chan, tags, message, self) => {
+            client.on('message', (channel, tags, message, self) => {
                 if (self) return;
                 
-                displayMessage(tags['display-name'], message, tags.color);
+                const stream = document.getElementById('chat-stream');
+                const div = document.createElement('div');
+                div.innerHTML = `<span style="color:${tags.color || '#9146ff'}"><strong>${tags['display-name']}:</strong></span> ${message}`;
+                stream.appendChild(div);
+                stream.scrollTop = stream.scrollHeight;
 
                 const isMod = tags.mod || tags['badges-raw']?.includes('broadcaster');
                 const args = message.split(' ');
                 const cmd = args[0].toLowerCase();
 
-                // Comando !add !comando testo
-                if (cmd === '!add' && isMod) {
-                    const newCmd = args[1];
-                    const reply = args.slice(2).join(' ');
-                    if (newCmd && newCmd.startsWith('!') && reply) {
-                        dynamicCommands[newCmd] = reply;
-                        localStorage.setItem('aaBot_cmds', JSON.stringify(dynamicCommands));
-                        updateCmdUI();
-                        client.say(chan, `✅ Comando ${newCmd} aggiunto!`);
-                    }
+                if (cmd === '!add' && isMod && args[1] && args[2]) {
+                    const n = args[1];
+                    const r = args.slice(2).join(' ');
+                    dynamicCommands[n] = r;
+                    localStorage.setItem('aa_cmds', JSON.stringify(dynamicCommands));
+                    renderCmds();
+                    client.say(channel, `Comando ${n} aggiunto!`);
                 }
 
-                // Esecuzione comandi
-                if (dynamicCommands[cmd]) {
-                    client.say(chan, dynamicCommands[cmd]);
-                }
+                if (dynamicCommands[cmd]) client.say(channel, dynamicCommands[cmd]);
             });
         }
 
-        function displayMessage(user, msg, color) {
-            const stream = document.getElementById('chat-stream');
-            const div = document.createElement('div');
-            div.innerHTML = `<span style="color:${color || '#9146ff'}"><strong>${user}:</strong></span> ${msg}`;
-            stream.appendChild(div);
-            stream.scrollTop = stream.scrollHeight;
-        }
-
-        function addLog(text) {
-            const stream = document.getElementById('chat-stream');
-            stream.innerHTML += `<p class="text-yellow-500 italic">// ${text}</p>`;
-        }
-
-        function updateCmdUI() {
-            const list = document.getElementById('cmd-list');
-            list.innerHTML = Object.keys(dynamicCommands).map(c => 
-                `<div class="bg-black/40 p-2 rounded flex justify-between items-center border border-gray-800">
-                    <span class="text-xs font-bold text-purple-400">${c}</span>
-                    <button onclick="deleteCmd('${c}')" class="text-[8px] text-red-500 hover:text-white">ELIMINA</button>
+        function renderCmds() {
+            const l = document.getElementById('cmd-list');
+            l.innerHTML = Object.keys(dynamicCommands).map(c => 
+                `<div class="bg-black/40 p-2 rounded text-[10px] flex justify-between items-center">
+                    <span class="text-purple-300 font-bold">${c}</span>
+                    <button onclick="delCmd('${c}')" class="text-red-500">X</button>
                 </div>`
             ).join('');
         }
 
-        function deleteCmd(cmd) {
-            delete dynamicCommands[cmd];
-            localStorage.setItem('aaBot_cmds', JSON.stringify(dynamicCommands));
-            updateCmdUI();
+        function delCmd(c) {
+            delete dynamicCommands[c];
+            localStorage.setItem('aa_cmds', JSON.stringify(dynamicCommands));
+            renderCmds();
         }
 
-        function quickAction(cmd) {
-            if (client) {
-                client.say(client.getChannels()[0], cmd);
-            } else {
-                alert("Collega Twitch prima!");
-            }
+        function quickAction(c) {
+            if (client) client.say(client.getChannels()[0], c);
         }
     </script>
-
-    <style>
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #2f2f35; border-radius: 10px; }
-        #chat-stream div { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 2px 0; }
-    </style>
 </body>
 </html>
