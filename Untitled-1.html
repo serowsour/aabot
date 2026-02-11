@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Twitch Ultra Mod & Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/dist/tmi.min.js"></script>
+</head>
+<body class="bg-[#0e0e10] text-white font-sans p-4">
+
+    <div class="max-w-5xl mx-auto bg-[#18181b] rounded-lg border border-[#2f2f35] flex flex-col h-[90vh]">
+        <div class="p-4 border-b border-[#2f2f35] flex justify-between items-center bg-[#1f1f23]">
+            <h2 class="font-bold text-purple-500 tracking-tighter text-xl">COMMANDER-BOT</h2>
+            <button onclick="loginTwitch()" id="statusBtn" class="bg-[#9146ff] hover:bg-[#772ce8] px-6 py-2 rounded font-bold transition">CONNETTI TWITCH</button>
+        </div>
+
+        <div class="flex flex-1 overflow-hidden">
+            <div class="flex-1 flex flex-col p-4">
+                <div id="chat-stream" class="flex-1 overflow-y-auto space-y-2 text-sm pr-2 border-b border-[#2f2f35] mb-4">
+                    <p class="text-gray-600 italic">Connetti per vedere la chat...</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="exec('/subsonly')" class="bg-yellow-600 px-3 py-1 rounded text-xs font-bold uppercase">Anti-Raid On</button>
+                    <button onclick="exec('/subsonlyoff')" class="bg-gray-600 px-3 py-1 rounded text-xs font-bold uppercase">Anti-Raid Off</button>
+                    <button onclick="exec('/clear')" class="bg-red-600 px-3 py-1 rounded text-xs font-bold uppercase">Svuota Chat</button>
+                </div>
+            </div>
+
+            <div class="w-72 bg-[#1f1f23] p-4 border-l border-[#2f2f35] overflow-y-auto">
+                <h3 class="text-xs font-black text-gray-500 uppercase mb-4 tracking-widest">Comandi Attivi</h3>
+                <div id="command-list" class="space-y-2 text-sm text-purple-300 italic">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let client;
+        let dynamicCommands = {}; // Qui salviamo i comandi fatti con !add
+        const CLIENT_ID = 'uqf5d6at2fnet8w5tylz17l2sb4onx'; 
+
+        function loginTwitch() {
+            const scope = 'chat:read chat:edit channel:moderate';
+            const redirect = window.location.href.split('#')[0];
+            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${redirect}&response_type=token&scope=${encodeURIComponent(scope)}`;
+        }
+
+        const hash = window.location.hash;
+        if (hash) {
+            const token = new URLSearchParams(hash.substring(1)).get('access_token');
+            if (token) initBot(token);
+        }
+
+        function initBot(token) {
+            const channel = prompt("Nome del tuo canale:");
+            client = new tmi.Client({
+                identity: { username: channel, password: `oauth:${token}` },
+                channels: [channel]
+            });
+
+            client.connect().then(() => {
+                document.getElementById('statusBtn').innerText = "BOT ONLINE";
+                document.getElementById('statusBtn').classList.replace('bg-[#9146ff]', 'bg-green-600');
+            });
+
+            client.on('message', (channel, tags, message, self) => {
+                if (self) return;
+
+                const chatBox = document.getElementById('chat-stream');
+                const isMod = tags.mod || tags['badges-raw']?.includes('broadcaster');
+
+                // Visualizzazione Chat
+                chatBox.innerHTML += `<div><span class="font-bold" style="color:${tags.color}">${tags['display-name']}:</span> ${message}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                // LOGICA COMANDI DINAMICI
+                const args = message.split(' ');
+                const command = args[0].toLowerCase();
+
+                // 1. Aggiungere comando: !add !nomecomando testo...
+                if (command === '!add' && isMod) {
+                    const newCmd = args[1];
+                    const response = args.slice(2).join(' ');
+                    if (newCmd && response) {
+                        dynamicCommands[newCmd] = response;
+                        updateCmdUI();
+                        client.say(channel, `✅ Comando ${newCmd} aggiunto con successo!`);
+                    }
+                }
+
+                // 2. Esecuzione comandi salvati
+                if (dynamicCommands[command]) {
+                    client.say(channel, dynamicCommands[command]);
+                }
+
+                // 3. Sistema Anti-Spam / Anti-Raid base
+                if (message.toUpperCase() === message && message.length > 20) {
+                    client.timeout(channel, tags.username, 10, "No Caps Lock spam");
+                }
+            });
+        }
+
+        function updateCmdUI() {
+            const list = document.getElementById('command-list');
+            list.innerHTML = Object.keys(dynamicCommands).map(c => `<div>${c}</div>`).join('');
+        }
+
+        function exec(cmd) {
+            if (client) client.say(client.getChannels()[0], cmd);
+        }
+    </script>
+</body>
+</html>
