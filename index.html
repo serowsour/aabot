@@ -3,50 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 10 Pro - Twitch Moderator Station</title>
+    <title>Win10 Pro - Advanced Mod Station</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
-    <link href="https://fonts.cdnfonts.com/css/segoe-ui-4" rel="stylesheet">
-
     <style>
         :root {
-            --win-blue: #0078d7;
-            --win-bg: #1f1f1f;
-            --win-darker: #171717;
+            --win-accent: #0078d7;
+            --win-bg-dark: #1f1f1f;
             --win-border: #454545;
-            --win-text: #ffffff;
-            --win-taskbar: rgba(0, 0, 0, 0.8);
-        }
-
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
+            --win-success: #107c10;
+            --win-error: #e81123;
         }
 
         body {
-            background-color: #000;
-            background-image: url('https://img.wallpapersafari.com/desktop/1920/1080/23/84/WvTf0N.jpg');
-            background-size: cover;
-            background-position: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #000;
+            color: white;
             height: 100vh;
-            margin: 0;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            margin: 0;
         }
 
-        /* --- FINESTRA WINDOWS 10 STYLE --- */
-        .window-frame {
-            background: var(--win-bg);
-            border: 1px solid var(--win-blue);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* --- FINESTRA WINDOWS 10 --- */
+        .window {
+            background: var(--win-bg-dark);
+            border: 1px solid var(--win-accent);
             display: flex;
             flex-direction: column;
-            width: 98vw;
-            height: 94vh;
-            margin: auto;
-            position: relative;
+            width: 100%;
+            height: calc(100vh - 40px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
 
         .title-bar {
@@ -55,162 +41,60 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-left: 10px;
-            user-select: none;
-        }
-
-        .title-bar .caption {
+            padding: 0 10px;
             font-size: 12px;
-            color: #ccc;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            cursor: default;
         }
 
-        .win-controls {
-            display: flex;
-            height: 100%;
-        }
-
-        .win-btn {
-            width: 46px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.1s;
-            font-size: 14px;
-        }
-
-        .win-btn:hover { background: #333; }
-        .win-btn.close:hover { background: #e81123; color: #fff; }
-
-        /* --- LAYOUT INTERNO --- */
-        .content-area {
+        /* --- LAYOUT GRID --- */
+        .grid-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 200px 1fr 350px;
+            grid-template-columns: 240px 1fr 380px;
+            grid-template-rows: 1fr 200px;
             overflow: hidden;
-            background: #111;
         }
 
-        /* Sidebar sinistra */
-        .sidebar {
-            background: var(--win-darker);
-            border-right: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-        }
+        /* --- COMPONENTI --- */
+        .panel { border: 1px solid #333; background: #111; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .sidebar { grid-row: span 2; background: #1a1a1a; }
+        .main-view { background: #000; position: relative; }
+        .chat-view { grid-row: span 2; background: #0a0a0a; }
+        .status-panel { background: #1a1a1a; }
 
-        .nav-item {
-            padding: 12px 15px;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            border-left: 4px solid transparent;
-        }
+        /* --- CHAT STYLING --- */
+        #chat-flow { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; scroll-behavior: smooth; }
+        .msg-line { padding: 4px 8px; border-bottom: 1px solid #1a1a1a; position: relative; transition: 0.1s; }
+        .msg-line:hover { background: #252525; }
+        .msg-meta { font-size: 10px; color: #666; margin-right: 5px; font-family: monospace; }
+        .msg-user { font-weight: 700; cursor: pointer; }
+        .msg-text { color: #ccc; word-wrap: break-word; }
 
-        .nav-item:hover { background: #2d2d2d; }
-        .nav-item.active { 
-            background: #3d3d3d; 
-            border-left-color: var(--win-blue); 
-        }
-
-        /* Monitor Centrale */
-        .main-stage {
-            display: flex;
-            flex-direction: column;
-            background: #000;
-            border-right: 1px solid #333;
-        }
-
-        #video-viewport {
-            flex: 1;
-            background: #000;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #video-viewport iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Console Chat Destra */
-        .chat-console {
-            display: flex;
-            flex-direction: column;
-            background: #0a0a0a;
-        }
-
-        .chat-header {
-            height: 40px;
-            background: #1a1a1a;
-            border-bottom: 1px solid #333;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #888;
-            text-transform: uppercase;
-        }
-
-        #chat-log {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        /* --- MESSAGGI CHAT --- */
-        .message {
-            margin-bottom: 8px;
-            position: relative;
-            padding: 4px 6px;
-            border-radius: 2px;
-            transition: background 0.2s;
-        }
-
-        .message:hover { background: rgba(255,255,255,0.05); }
-
-        .mod-tools-inline {
+        /* --- MOD TOOLS INLINE --- */
+        .inline-tools {
             display: none;
             position: absolute;
             right: 5px;
-            top: 5px;
-            background: #1f1f1f;
-            border: 1px solid #444;
-            gap: 2px;
-            padding: 2px;
-            z-index: 10;
-        }
-
-        .message:hover .mod-tools-inline { display: flex; }
-
-        .mini-btn {
-            padding: 2px 6px;
-            font-size: 10px;
+            top: 2px;
             background: #333;
-            color: #ccc;
-            border: 1px solid #555;
-            cursor: pointer;
+            border: 1px solid var(--win-accent);
+            padding: 2px;
+            z-index: 100;
         }
+        .msg-line:hover .inline-tools { display: flex; gap: 4px; }
+        .tool-btn { padding: 1px 6px; font-size: 9px; font-weight: bold; background: #444; border: 1px solid #555; cursor: pointer; }
+        .tool-btn:hover { background: var(--win-accent); }
+        .tool-btn.del:hover { background: var(--win-error); }
 
-        .mini-btn:hover { background: var(--win-blue); color: #fff; }
-        .mini-btn.danger:hover { background: #e81123; }
-
-        /* Input area */
-        .input-bar {
-            padding: 10px;
-            background: #1a1a1a;
+        /* --- TASKBAR --- */
+        .taskbar {
+            height: 40px;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
             border-top: 1px solid #333;
         }
 
@@ -219,335 +103,305 @@
             background: #000;
             border: 1px solid #444;
             color: #fff;
-            padding: 8px;
+            padding: 8px 12px;
             font-size: 13px;
-            outline: none;
+            transition: 0.2s;
+        }
+        .win-input:focus { border-color: var(--win-accent); outline: none; }
+
+        /* --- ANIMAZIONI & UTILITY --- */
+        .pulse { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        #overlay-login {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .win-input:focus { border-color: var(--win-blue); }
-
-        /* --- TASKBAR INFERIORE --- */
-        .taskbar {
-            height: 40px;
-            background: var(--win-taskbar);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 10px;
-            z-index: 100;
+        .win-button {
+            background: var(--win-accent); color: white; padding: 10px 25px;
+            border: none; font-weight: 600; cursor: pointer; transition: 0.2s;
         }
-
-        .task-icons { display: flex; height: 100%; align-items: center; }
-        .task-icon {
-            width: 40px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .task-icon:hover { background: rgba(255,255,255,0.1); }
-        .task-icon.active { border-bottom: 2px solid var(--win-blue); background: rgba(255,255,255,0.1); }
-
-        .tray { display: flex; align-items: center; gap: 15px; color: #fff; font-size: 12px; }
-
-        /* Modals */
-        #auth-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .login-card {
-            background: #1f1f1f;
-            border: 1px solid var(--win-blue);
-            padding: 40px;
-            text-align: center;
-            width: 400px;
-        }
-
-        .loader {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #333;
-            border-top-color: var(--win-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .win-button:hover { filter: brightness(1.2); }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="auth-overlay">
-        <div class="login-card">
-            <h1 style="font-size: 24px; margin-bottom: 10px;">Windows 10 Pro</h1>
-            <p style="color: #888; margin-bottom: 30px;">Moderator Workstation Login</p>
-            <button onclick="App.login()" style="background: var(--win-blue); color: white; padding: 12px 30px; border: none; font-weight: bold; cursor: pointer; width: 100%;">
-                ACCEDI CON TWITCH
-            </button>
-            <p id="auth-status" style="margin-top: 15px; font-size: 11px; color: #555;"></p>
+    <div id="overlay-login">
+        <div style="text-align: center; border: 1px solid #333; padding: 40px; background: #111;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Windows_logo_-_2012.svg" width="60" style="filter: invert(1); margin-bottom: 20px;">
+            <h1 style="font-size: 24px; margin-bottom: 5px;">Benvenuto in Win10 Pro</h1>
+            <p style="color: #666; font-size: 12px; margin-bottom: 30px;">Moderator Cloud Console v3.5.1</p>
+            <button onclick="Core.auth.login()" class="win-button">ACCEDI CON ACCOUNT TWITCH</button>
+            <div id="login-log" style="margin-top: 20px; font-size: 10px; color: #444; font-family: monospace;">Attesa input...</div>
         </div>
     </div>
 
-    <div id="main-window" class="window-frame hidden">
+    <div id="ui-root" class="window hidden">
         <div class="title-bar">
-            <div class="caption">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Windows_logo_-_2012.svg" width="14" style="filter: invert(1);">
-                <span>Moderator Pro Station - [Admin Mode]</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--win-accent);">🪟</span>
+                <span id="win-title">Admin Terminal - Twitch Moderation</span>
             </div>
-            <div class="win-controls">
-                <div class="win-btn"></div>
-                <div class="win-btn"></div>
-                <div class="win-btn close" onclick="App.logout()">✕</div>
+            <div style="display: flex; gap: 15px;">
+                <span id="mps-counter">MPS: 0</span>
+                <span>✕</span>
             </div>
         </div>
 
-        <div class="content-area">
-            <div class="sidebar">
-                <div style="padding: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; margin-bottom: 10px;">
-                    <img id="my-avatar" src="" style="width: 32px; height: 32px; border-radius: 50%;">
-                    <div>
-                        <div id="my-name" style="font-size: 12px; font-weight: bold;">User</div>
-                        <div style="font-size: 10px; color: #0f0;">Online</div>
-                    </div>
+        <div class="grid-container">
+            <div class="panel sidebar">
+                <div style="padding: 20px; border-bottom: 1px solid #333; margin-bottom: 10px;">
+                    <img id="my-pic" src="" style="width: 48px; border: 2px solid var(--win-accent); border-radius: 50%; margin-bottom: 10px;">
+                    <div id="my-name" style="font-weight: bold; font-size: 14px;">User</div>
+                    <div id="my-status" style="font-size: 10px; color: #107c10;">● ONLINE</div>
                 </div>
-                <div class="nav-item active">🏠 Dashboard</div>
-                <div class="nav-item">🛡️ Shield Center</div>
-                <div class="nav-item">📊 Statistics</div>
-                <div class="nav-item">🛡️ Ban Appeals</div>
-                <div class="nav-item">⚙️ Settings</div>
+                
+                <nav style="flex: 1;">
+                    <div class="nav-item" style="padding: 10px 20px; background: #333; border-left: 3px solid var(--win-accent);">Console Live</div>
+                    <div class="nav-item" style="padding: 10px 20px; color: #666;">Logs Storici</div>
+                    <div class="nav-item" style="padding: 10px 20px; color: #666;">Gestione Bot</div>
+                </nav>
 
-                <div style="margin-top: auto; padding: 15px;">
-                    <button onclick="App.toggleShield()" id="shield-btn" style="width: 100%; padding: 10px; background: #e81123; border: none; color: white; font-weight: bold; font-size: 11px;">
-                        ATTIVA SHIELD
+                <div style="padding: 15px;">
+                    <button onclick="Core.actions.toggleShield()" id="shield-trigger" style="width: 100%; padding: 12px; background: var(--win-error); border: none; color: white; font-weight: bold; font-size: 11px;">
+                        SHIELD: OFF
                     </button>
                 </div>
             </div>
 
-            <div class="main-stage">
-                <div id="video-viewport">
-                    <p style="color: #444; italic">Inizializzazione Player...</p>
-                </div>
-                <div style="height: 120px; background: #1a1a1a; border-top: 1px solid #333; padding: 15px;">
-                    <div style="font-size: 10px; color: #555; margin-bottom: 10px; font-weight: bold; text-transform: uppercase;">Azioni Rapide Canale</div>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="App.send('/clear')" style="flex: 1; padding: 10px; background: #333; border: 1px solid #444; color: #ccc; font-size: 11px;">CLEAR CHAT</button>
-                        <button onclick="App.send('/emoteonly')" style="flex: 1; padding: 10px; background: #333; border: 1px solid #444; color: #ccc; font-size: 11px;">EMOTE ONLY</button>
-                        <button onclick="App.send('/subsonly')" style="flex: 1; padding: 10px; background: #333; border: 1px solid #444; color: #ccc; font-size: 11px;">SUBS ONLY</button>
-                        <button onclick="App.send('/slow 10')" style="flex: 1; padding: 10px; background: #333; border: 1px solid #444; color: #ccc; font-size: 11px;">SLOW 10s</button>
-                    </div>
+            <div class="panel main-view">
+                <div id="player-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <div class="pulse" style="color: #333;">CARICAMENTO STREAM...</div>
                 </div>
             </div>
 
-            <div class="chat-console">
-                <div class="chat-header">
-                    <span>Chat Stream: </span>
-                    <span id="target-chan-name" style="color: var(--win-blue); margin-left: 5px;">#none</span>
+            <div class="panel chat-view">
+                <div style="background: #1a1a1a; padding: 8px 15px; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333;">
+                    RETIREVED CHAT: <span id="current-channel" style="color: var(--win-accent);">#---</span>
                 </div>
-                <div id="chat-log"></div>
-                <div class="input-bar">
-                    <input type="text" id="chat-input" class="win-input" placeholder="Invia messaggio...">
+                <div id="chat-flow"></div>
+                <div style="padding: 10px; background: #111; border-top: 1px solid #333;">
+                    <input type="text" id="chat-sender" class="win-input" placeholder="Invia un messaggio in chat...">
+                </div>
+            </div>
+
+            <div class="panel status-panel" style="padding: 15px; grid-column: 2;">
+                <h3 style="font-size: 10px; color: #555; text-transform: uppercase; margin-bottom: 10px;">Comandi Rapidi</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
+                    <button onclick="Core.actions.send('/clear')" class="tool-btn" style="height: 35px;">CLEAR</button>
+                    <button onclick="Core.actions.send('/subsonly')" class="tool-btn" style="height: 35px;">SUBS ONLY</button>
+                    <button onclick="Core.actions.send('/emoteonly')" class="tool-btn" style="height: 35px;">EMOTE ONLY</button>
+                    <button onclick="Core.actions.send('/slow 10')" class="tool-btn" style="height: 35px;">SLOW 10s</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="taskbar">
-        <div class="task-icons">
-            <div class="task-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Windows_logo_-_2012.svg" width="18" style="filter: invert(1);"></div>
-            <div class="task-icon active">🛡️</div>
-            <div class="task-icon">🌐</div>
-            <div class="task-icon">📁</div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Windows_logo_-_2012.svg" width="18" style="filter: invert(1);">
+            <div style="display: flex; gap: 5px;">
+                <div style="width: 30px; height: 30px; background: #333; display: flex; align-items: center; justify-content: center;">🔍</div>
+                <div style="width: 30px; height: 30px; background: #333; border-bottom: 2px solid var(--win-accent); display: flex; align-items: center; justify-content: center;">🛡️</div>
+            </div>
         </div>
-        <div class="tray">
-            <div id="net-status" style="color: #0f0;">CONNECTED</div>
-            <div id="clock">00:00</div>
+        <div style="display: flex; align-items: center; gap: 15px; font-size: 11px; color: #888;">
+            <span id="latency-label">LATENCY: -- MS</span>
+            <span id="clock-display">00:00</span>
         </div>
     </div>
 
     <script>
         /**
-         * APPLICATION CORE
-         * Handles Authentication, Twitch Socket and UI State
+         * CORE ARCHITECTURE V3.5
+         * Modulare, orientata agli oggetti
          */
-        const App = {
-            config: {
-                clientId: 'uqf5d6at2fnet8w5tylz17l2sb4onx',
-                redirectUri: 'https://serowsour.github.io/aabot/',
-                parent: 'serowsour.github.io', // <--- CAMBIA IN 'localhost' SE TESTI IN LOCALE
-                scopes: 'chat:read chat:edit channel:moderate user:read:email'
-            },
-            
+        const Core = {
             state: {
                 token: null,
-                client: null,
-                channel: null,
                 user: null,
-                isShieldActive: false
+                channel: null,
+                client: null,
+                mps: 0,
+                isShield: false,
+                parent: window.location.hostname || 'serowsour.github.io'
             },
 
-            async init() {
-                this.updateClock();
-                setInterval(() => this.updateClock(), 1000);
+            init() {
+                this.utils.startClock();
+                this.auth.checkCallback();
+            },
 
-                const hash = window.location.hash;
-                if (hash) {
-                    const params = new URLSearchParams(hash.substring(1));
-                    this.state.token = params.get('access_token');
-                    if (this.state.token) {
+            auth: {
+                login() {
+                    const cid = 'uqf5d6at2fnet8w5tylz17l2sb4onx';
+                    const uri = 'https://serowsour.github.io/aabot/';
+                    const scope = 'chat:read chat:edit channel:moderate user:read:email';
+                    window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${cid}&redirect_uri=${encodeURIComponent(uri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+                },
+
+                async checkCallback() {
+                    const hash = window.location.hash;
+                    if (hash.includes('access_token')) {
+                        const params = new URLSearchParams(hash.substring(1));
+                        Core.state.token = params.get('access_token');
                         window.history.pushState({}, document.title, window.location.pathname);
-                        this.startSession();
+                        this.validate();
+                    }
+                },
+
+                async validate() {
+                    document.getElementById('login-log').innerText = "Validazione API Helix...";
+                    try {
+                        const r = await fetch('https://api.twitch.tv/helix/users', {
+                            headers: { 'Authorization': `Bearer ${Core.state.token}`, 'Client-ID': 'uqf5d6at2fnet8w5tylz17l2sb4onx' }
+                        });
+                        const d = await r.json();
+                        Core.state.user = d.data[0];
+                        
+                        UI.showMain();
+                        this.askChannel();
+                    } catch (e) {
+                        alert("Sessione fallita. Riprova.");
+                    }
+                },
+
+                askChannel() {
+                    const chan = prompt("DIGITA IL CANALE DA MODERARE:");
+                    if (chan) {
+                        Core.state.channel = chan.toLowerCase().trim();
+                        Core.bot.connect();
+                        UI.loadPlayer();
                     }
                 }
             },
 
-            login() {
-                const url = `https://id.twitch.tv/oauth2/authorize?client_id=${this.config.clientId}&redirect_uri=${encodeURIComponent(this.config.redirectUri)}&response_type=token&scope=${encodeURIComponent(this.config.scopes)}`;
-                window.location.href = url;
-            },
-
-            logout() {
-                this.state.token = null;
-                location.reload();
-            },
-
-            async startSession() {
-                document.getElementById('auth-status').innerText = "Validazione sessione in corso...";
-                
-                try {
-                    const userResp = await fetch('https://api.twitch.tv/helix/users', {
-                        headers: {
-                            'Authorization': `Bearer ${this.state.token}`,
-                            'Client-ID': this.config.clientId
-                        }
+            bot: {
+                connect() {
+                    Core.state.client = new tmi.Client({
+                        options: { debug: false },
+                        identity: {
+                            username: Core.state.user.login,
+                            password: `oauth:${Core.state.token}`
+                        },
+                        channels: [Core.state.channel]
                     });
-                    const userData = await userResp.json();
-                    this.state.user = userData.data[0];
 
-                    document.getElementById('my-avatar').src = this.state.user.profile_image_url;
-                    document.getElementById('my-name').innerText = this.state.user.display_name;
+                    Core.state.client.connect()
+                        .then(() => UI.systemNotify(`Connessione riuscita a #${Core.state.channel}`))
+                        .catch(e => UI.systemNotify(`Errore: ${e}`, true));
 
-                    const target = prompt("Inserisci il canale da moderare:");
-                    if (target) {
-                        this.state.channel = target.toLowerCase().trim();
-                        this.connectTwitch();
+                    this.events();
+                },
+
+                events() {
+                    Core.state.client.on('message', (chan, tags, msg, self) => {
+                        Core.state.mps++;
+                        UI.renderMsg(tags, msg);
+                    });
+
+                    setInterval(() => {
+                        document.getElementById('mps-counter').innerText = `MPS: ${Core.state.mps}`;
+                        Core.state.mps = 0;
+                    }, 1000);
+                }
+            },
+
+            actions: {
+                send(txt) {
+                    if (Core.state.client) Core.state.client.say(Core.state.channel, txt);
+                },
+
+                toggleShield() {
+                    Core.state.isShield = !Core.state.isShield;
+                    const btn = document.getElementById('shield-trigger');
+                    if (Core.state.isShield) {
+                        this.send('/subsonly');
+                        this.send('/slow 10');
+                        this.send('/clear');
+                        btn.innerText = "SHIELD: ACTIVE";
+                        btn.style.background = "#107c10";
+                    } else {
+                        this.send('/subsonlyoff');
+                        this.send('/slowoff');
+                        btn.innerText = "SHIELD: OFF";
+                        btn.style.background = "#e81123";
                     }
-                } catch (e) {
-                    alert("Errore durante il login: " + e.message);
                 }
             },
 
-            connectTwitch() {
-                document.getElementById('auth-overlay').classList.add('hidden');
-                document.getElementById('main-window').classList.remove('hidden');
-                document.getElementById('target-chan-name').innerText = `#${this.state.channel}`;
-
-                // Init Player
-                const playerDiv = document.getElementById('video-viewport');
-                playerDiv.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${this.state.channel}&parent=${this.config.parent}&autoplay=true" allowfullscreen="true"></iframe>`;
-
-                // Init TMI
-                this.state.client = new tmi.Client({
-                    options: { debug: false },
-                    identity: {
-                        username: this.state.user.login,
-                        password: `oauth:${this.state.token}`
-                    },
-                    channels: [this.state.channel]
-                });
-
-                this.state.client.connect().catch(e => console.error(e));
-
-                this.state.client.on('message', (chan, tags, msg, self) => {
-                    this.renderMessage(tags, msg);
-                });
-
-                this.setupInput();
-            },
-
-            renderMessage(tags, msg) {
-                const log = document.getElementById('chat-log');
-                const isMod = tags.mod || tags.badges?.broadcaster === '1';
-                
-                const div = document.createElement('div');
-                div.className = 'message';
-                
-                const color = tags.color || '#0078d7';
-                
-                div.innerHTML = `
-                    <div class="mod-tools-inline">
-                        <button class="mini-btn" onclick="App.send('/delete ${tags.id}')">🗑️</button>
-                        <button class="mini-btn" onclick="App.send('/timeout ${tags.username} 600')">⏳</button>
-                        <button class="mini-btn danger" onclick="App.send('/ban ${tags.username}')">🚫</button>
-                    </div>
-                    <span style="color: #555; font-size: 10px; margin-right: 5px;">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    <span style="color: ${color}; font-weight: bold;">${tags['display-name']}</span>: 
-                    <span style="color: #eee;">${msg}</span>
-                `;
-                
-                log.appendChild(div);
-                log.scrollTop = log.scrollHeight;
-            },
-
-            setupInput() {
-                const input = document.getElementById('chat-input');
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && input.value) {
-                        this.state.client.say(this.state.channel, input.value);
-                        input.value = '';
-                    }
-                });
-            },
-
-            send(cmd) {
-                if (this.state.client) {
-                    this.state.client.say(this.state.channel, cmd);
+            utils: {
+                startClock() {
+                    setInterval(() => {
+                        const n = new Date();
+                        document.getElementById('clock-display').innerText = n.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }, 1000);
                 }
-            },
-
-            toggleShield() {
-                const btn = document.getElementById('shield-btn');
-                if (!this.state.isShieldActive) {
-                    this.send('/subsonly');
-                    this.send('/emoteonly');
-                    this.send('/slow 15');
-                    this.send('/clear');
-                    btn.innerText = "SHIELD ATTIVO - DISATTIVA";
-                    btn.style.background = "#0f0";
-                    btn.style.color = "#000";
-                    this.state.isShieldActive = true;
-                } else {
-                    this.send('/subsonlyoff');
-                    this.send('/emoteonlyoff');
-                    this.send('/slowoff');
-                    btn.innerText = "ATTIVA SHIELD";
-                    btn.style.background = "#e81123";
-                    btn.style.color = "#fff";
-                    this.state.isShieldActive = false;
-                }
-            },
-
-            updateClock() {
-                const now = new Date();
-                document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
         };
 
-        // Boot
-        App.init();
+        const UI = {
+            showMain() {
+                document.getElementById('overlay-login').classList.add('hidden');
+                document.getElementById('ui-root').classList.remove('hidden');
+                document.getElementById('my-pic').src = Core.state.user.profile_image_url;
+                document.getElementById('my-name').innerText = Core.state.user.display_name;
+            },
 
+            loadPlayer() {
+                document.getElementById('current-channel').innerText = `#${Core.state.channel}`;
+                document.getElementById('player-container').innerHTML = `
+                    <iframe 
+                        src="https://player.twitch.tv/?channel=${Core.state.channel}&parent=${Core.state.parent}&autoplay=true" 
+                        height="100%" width="100%" allowfullscreen="true">
+                    </iframe>`;
+            },
+
+            renderMsg(tags, msg) {
+                const flow = document.getElementById('chat-flow');
+                const line = document.createElement('div');
+                line.className = 'msg-line';
+                
+                const color = tags.color || '#0078d7';
+                const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+                line.innerHTML = `
+                    <div class="inline-tools">
+                        <button class="tool-btn del" onclick="Core.actions.send('/delete ${tags.id}')">DEL</button>
+                        <button class="tool-btn" onclick="Core.actions.send('/timeout ${tags.username} 600')">10M</button>
+                        <button class="tool-btn" onclick="Core.actions.send('/ban ${tags.username}')">BAN</button>
+                    </div>
+                    <span class="msg-meta">${time}</span>
+                    <span class="msg-user" style="color:${color}">${tags['display-name']}</span>: 
+                    <span class="msg-text">${msg}</span>
+                `;
+                flow.appendChild(line);
+                flow.scrollTop = flow.scrollHeight;
+            },
+
+            systemNotify(txt, isErr = false) {
+                const flow = document.getElementById('chat-flow');
+                const div = document.createElement('div');
+                div.style.color = isErr ? '#e81123' : '#0078d7';
+                div.style.fontSize = '10px';
+                div.style.padding = '5px';
+                div.innerText = `[SYSTEM] ${txt}`;
+                flow.appendChild(div);
+            }
+        };
+
+        // Input Listener
+        document.getElementById('chat-sender').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                Core.actions.send(e.target.value);
+                e.target.value = '';
+            }
+        });
+
+        Core.init();
     </script>
 </body>
 </html>
