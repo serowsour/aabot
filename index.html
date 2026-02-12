@@ -3,384 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN OPERATIONAL CENTER | Enterprise ModView</title>
+    <title>TITAN OPERATIONAL V5 | Enterprise ModView</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <style>
-        /* --- ARCHITETTURA CSS --- */
+        /* * TITAN SYSTEM ARCHITECTURE - CSS DESIGN SYSTEM
+         */
         :root {
-            --bg-deep: #050505;
-            --bg-surface: #0e0e10;
-            --bg-panel: #18181b;
-            --bg-header: #1f1f23;
+            --bg-black: #0e0e10;
+            --bg-surface: #18181b;
+            --bg-panel: #1f1f23;
+            --bg-accent: #26262c;
             --twitch-purple: #9147ff;
             --twitch-purple-hover: #772ce8;
             --border-ui: #303032;
             --text-main: #efeff1;
             --text-muted: #adadb8;
-            --accent-red: #eb0400;
-            --accent-green: #00f593;
-            --accent-blue: #00d1ff;
-            --panel-gap: 6px;
+            --status-green: #00f593;
+            --status-red: #eb0400;
+            --status-blue: #00d1ff;
+            --status-orange: #ffb31a;
+            --panel-gap: 8px;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border-ui) transparent;
-        }
-
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; scrollbar-width: thin; scrollbar-color: var(--border-ui) transparent; }
+        
         body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-deep);
+            height: 100%; margin: 0; padding: 0;
+            background-color: var(--bg-black);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             overflow: hidden;
         }
 
-        /* --- LAYOUT ENGINE --- */
-        .app-container {
+        /* GRID SYSTEM: 3 COLUMNS, COMPLEX ROWS */
+        .titan-grid {
             display: grid;
-            grid-template-columns: 50px 1fr 340px;
-            grid-template-rows: 50px 1fr 280px;
+            grid-template-columns: 280px 1fr 340px;
+            grid-template-rows: 50px 1fr 300px;
             height: 100vh;
             width: 100vw;
-            gap: 0;
+            padding: var(--panel-gap);
+            gap: var(--panel-gap);
         }
 
-        /* Navigazione Laterale Stretta (Icone) */
-        .sidebar-icons {
-            grid-column: 1;
-            grid-row: 2 / -1;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border-ui);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 15px;
-            gap: 20px;
-            z-index: 40;
-        }
-
-        .side-icon {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.2s;
-            color: var(--text-muted);
-        }
-
-        .side-icon:hover, .side-icon.active {
-            background: var(--bg-header);
-            color: white;
-        }
-
-        .side-icon.active {
-            border-left: 2px solid var(--twitch-purple);
-            border-radius: 0 4px 4px 0;
-        }
-
-        /* Header Superiore */
-        .main-header {
+        /* HEADER AREA */
+        .titan-header {
             grid-column: 1 / -1;
-            grid-row: 1;
-            background: var(--bg-header);
-            border-bottom: 1px solid var(--border-ui);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-ui);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
-            z-index: 50;
+            border-radius: 4px;
         }
 
-        /* Area Video Centralizzata */
-        .stream-viewport {
+        /* LEFT SIDEBAR: MOD TOOLS & STATS */
+        .titan-sidebar {
+            grid-column: 1;
+            grid-row: 2 / 4;
+            display: flex;
+            flex-direction: column;
+            gap: var(--panel-gap);
+        }
+
+        /* CENTER: STREAM & AUTOMOD */
+        .titan-main {
             grid-column: 2;
             grid-row: 2;
             background: #000;
-            margin: var(--panel-gap);
             border: 1px solid var(--border-ui);
+            border-radius: 4px;
             position: relative;
         }
 
-        /* Chat Laterale (Fissa) */
-        .chat-sidebar {
-            grid-column: 3;
-            grid-row: 2 / 4;
-            background: var(--bg-panel);
-            border-left: 1px solid var(--border-ui);
-            margin: var(--panel-gap);
-            margin-left: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Pannelli Strumenti Inferiori */
-        .bottom-shelf {
+        .titan-bottom-center {
             grid-column: 2;
             grid-row: 3;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: var(--panel-gap);
-            margin: 0 var(--panel-gap) var(--panel-gap) var(--panel-gap);
         }
 
-        .panel-box {
-            background: var(--bg-panel);
+        /* RIGHT: CHAT SYSTEM */
+        .titan-chat-area {
+            grid-column: 3;
+            grid-row: 2 / 4;
+            background: var(--bg-surface);
             border: 1px solid var(--border-ui);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* PANEL COMPONENTS */
+        .panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-ui);
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        .panel-title {
-            padding: 8px 12px;
-            background: var(--bg-header);
+        .panel-header {
+            background: var(--bg-panel);
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-ui);
             font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border-ui);
+            letter-spacing: 1px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
-        /* --- COMPONENTI CHAT --- */
-        #chat-flow {
+        .panel-content {
             flex: 1;
             overflow-y: auto;
             padding: 12px;
-            font-size: 13px;
-            line-height: 1.6;
         }
 
-        .msg-line {
+        /* CHAT STYLING */
+        #chat-render {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-msg {
             padding: 4px 8px;
             border-radius: 4px;
-            margin-bottom: 2px;
             position: relative;
-            animation: fadeIn 0.2s ease-out;
+            transition: 0.1s;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg:hover { background: rgba(255,255,255,0.04); }
 
-        .msg-line:hover { background: rgba(255,255,255,0.03); }
-        
-        .msg-tools {
-            display: none;
-            position: absolute;
-            right: 4px;
-            top: 4px;
-            background: var(--bg-header);
+        .msg-meta { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono'; margin-right: 6px; }
+        .msg-author { font-weight: 700; cursor: pointer; }
+        .msg-body { color: #fff; word-break: break-word; }
+
+        /* BUTTONS & CONTROLS */
+        .t-btn {
+            background: var(--bg-accent);
             border: 1px solid var(--border-ui);
-            padding: 2px;
-            gap: 4px;
-            z-index: 10;
-        }
-
-        .msg-line:hover .msg-tools { display: flex; }
-
-        .msg-badge {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            margin-right: 4px;
-            vertical-align: middle;
-            background-size: contain;
-        }
-
-        .msg-username { font-weight: 700; cursor: pointer; }
-        .msg-content { color: var(--text-main); word-wrap: break-word; }
-
-        /* --- AZIONI MODERATORE --- */
-        .mod-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: left;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
             gap: 8px;
-            padding: 12px;
-            overflow-y: auto;
         }
 
-        .mod-btn {
-            background: #2b2b2e;
-            border: 1px solid transparent;
-            color: #efeff1;
+        .t-btn:hover { background: #323239; border-color: var(--twitch-purple); }
+        .t-btn-purple { background: var(--twitch-purple); border-color: transparent; }
+        .t-btn-purple:hover { background: var(--twitch-purple-hover); }
+        .t-btn-danger { color: var(--status-red); border-color: rgba(235, 4, 0, 0.2); }
+        .t-btn-danger:hover { background: var(--status-red); color: white; }
+
+        /* INPUTS */
+        .t-input {
+            background: var(--bg-black);
+            border: 1px solid var(--border-ui);
+            color: white;
             padding: 10px;
             border-radius: 4px;
             font-size: 12px;
-            font-weight: 600;
-            text-align: left;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            outline: none;
+            width: 100%;
         }
 
-        .mod-btn:hover { background: #3a3a3d; border-color: var(--twitch-purple); }
-        .mod-btn-active { background: var(--twitch-purple) !important; color: white; }
+        .t-input:focus { border-color: var(--twitch-purple); }
 
-        .shield-active {
-            animation: pulse-red 1.5s infinite;
-            border-color: var(--accent-red) !important;
-            color: var(--accent-red) !important;
+        /* CUSTOM MACROS */
+        .macro-item {
+            background: var(--bg-panel);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            border-left: 3px solid var(--twitch-purple);
+            cursor: pointer;
         }
 
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(235, 4, 0, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(235, 4, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(235, 4, 0, 0); }
-        }
+        .macro-item:hover { background: var(--bg-accent); }
 
-        /* --- LOGIN & OVERLAYS --- */
-        #auth-overlay {
+        /* OVERLAYS */
+        #auth-guard {
             position: fixed;
             inset: 0;
-            background: var(--bg-deep);
+            background: var(--bg-black);
+            z-index: 9999;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-        }
-
-        .auth-card {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-ui);
-            padding: 40px;
-            width: 420px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        .btn-connect {
-            background: var(--twitch-purple);
-            color: white;
-            font-weight: 700;
-            padding: 12px 24px;
-            border-radius: 4px;
-            width: 100%;
-            margin-top: 20px;
-            transition: 0.2s;
+        .shield-active-mode {
+            animation: shield-pulse 1s infinite alternate;
         }
 
-        .btn-connect:hover { background: var(--twitch-purple-hover); transform: translateY(-1px); }
+        @keyframes shield-pulse {
+            from { box-shadow: inset 0 0 10px rgba(235, 4, 0, 0.2); border-color: var(--status-red); }
+            to { box-shadow: inset 0 0 30px rgba(235, 4, 0, 0.5); border-color: var(--status-red); }
+        }
 
         .hidden { display: none !important; }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #39393d; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-overlay">
-        <div class="auth-card">
-            <div class="flex justify-center mb-6">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 0L0 10V35H10V40L15 35H22.5L40 17.5V0H10ZM35 15L27.5 22.5H20L15 27.5V22.5H10V5H35V15ZM30 15V7.5H25V15H30ZM22.5 15V7.5H17.5V15H22.5Z" fill="#9147FF"/>
-                </svg>
+    <div id="auth-guard">
+        <div class="p-10 bg-[#18181b] border border-[#303032] rounded-lg max-w-md w-full shadow-2xl">
+            <div class="w-16 h-16 bg-[#9147ff] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
             </div>
-            <h1 class="text-xl font-extrabold mb-1">TITAN OPERATIONAL HUB</h1>
-            <p class="text-xs text-zinc-500 mb-8 mono uppercase tracking-widest">v4.0.2 Stable Release</p>
+            <h1 class="text-2xl font-black mb-2 uppercase tracking-tighter text-white">Titan Operational Center</h1>
+            <p class="text-zinc-500 text-xs font-mono mb-8 tracking-widest">v5.0.0 ENTERPRISE LICENSE</p>
             
-            <div id="auth-status-box" class="text-left bg-black p-3 rounded mb-6 text-[11px] font-mono text-zinc-400">
-                > Initializing system...<br>
-                > Waiting for Twitch OAuth...
+            <div id="auth-log" class="text-left bg-black p-4 rounded text-[10px] font-mono text-zinc-500 mb-6 h-24 overflow-y-auto">
+                > System ready...<br>
+                > Awaiting user handshake...
             </div>
 
-            <button onclick="Titan.auth.start()" class="btn-connect">CONNECT TWITCH ACCOUNT</button>
-            <p class="mt-4 text-[10px] text-zinc-600">Richiede permessi di moderazione per il canale target.</p>
+            <button onclick="Titan.auth.connect()" class="w-full bg-[#9147ff] hover:bg-[#772ce8] text-white py-4 rounded font-bold transition-all transform active:scale-95 shadow-xl">
+                INITIALIZE CONNECTION
+            </button>
         </div>
     </div>
 
-    <div id="titan-app" class="app-container hidden">
+    <div id="titan-app" class="titan-grid hidden">
         
-        <header class="main-header">
-            <div class="flex items-center gap-4">
+        <header class="titan-header">
+            <div class="flex items-center gap-6">
                 <div class="flex items-center gap-2">
-                    <div class="bg-indigo-600 p-1 rounded font-bold text-xs">TI</div>
-                    <span class="font-black text-sm tracking-tighter uppercase">Titan <span class="text-indigo-400">MOD</span></span>
+                    <div class="bg-indigo-600 text-white p-1 rounded font-black text-xs">TI</div>
+                    <span class="font-black text-sm uppercase">Titan <span class="text-indigo-400">Pro</span></span>
                 </div>
-                <div class="h-4 w-px bg-zinc-700"></div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-zinc-500 font-bold uppercase">Target:</span>
-                    <span id="ui-target-name" class="text-xs font-mono font-bold text-white">---</span>
+                <div class="h-6 w-px bg-zinc-800"></div>
+                <div class="flex flex-col">
+                    <span class="text-[9px] text-zinc-500 font-bold uppercase">Target Channel</span>
+                    <span id="ui-channel-name" class="text-xs font-mono font-bold text-white tracking-widest">---</span>
                 </div>
             </div>
 
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-3">
-                    <div id="status-led" class="w-2 h-2 rounded-full bg-zinc-600"></div>
-                    <span id="status-text" class="text-[10px] font-bold text-zinc-500 uppercase">OFFLINE</span>
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[9px] text-zinc-500 uppercase">System Status</span>
+                        <div class="flex items-center gap-2">
+                            <div id="status-dot" class="w-2 h-2 rounded-full bg-zinc-600"></div>
+                            <span id="status-label" class="text-[10px] font-bold text-zinc-500 uppercase">Disconnected</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3 pl-4 border-l border-zinc-700">
-                    <img id="ui-user-avatar" src="" class="w-7 h-7 rounded border border-zinc-700">
-                    <span id="ui-user-name" class="text-xs font-bold">User</span>
+                <div class="h-6 w-px bg-zinc-800"></div>
+                <div class="flex items-center gap-3">
+                    <img id="ui-user-avatar" src="" class="w-8 h-8 rounded-md border border-zinc-700 shadow-lg">
+                    <div class="flex flex-col">
+                        <span id="ui-user-name" class="text-xs font-bold text-white">Operator</span>
+                        <button onclick="location.reload()" class="text-[9px] text-red-500 font-bold uppercase hover:underline">Terminate</button>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <nav class="sidebar-icons">
-            <div class="side-icon active">🛡️</div>
-            <div class="side-icon">📈</div>
-            <div class="side-icon">⚡</div>
-            <div class="side-icon">🤖</div>
-            <div class="mt-auto mb-6 side-icon">⚙️</div>
-        </nav>
+        <aside class="titan-sidebar">
+            <div class="panel h-1/2">
+                <div class="panel-header">
+                    <span>Quick Management</span>
+                    <span class="text-indigo-400">Stream</span>
+                </div>
+                <div class="panel-content grid grid-cols-1 gap-2">
+                    <button onclick="Titan.api.createPoll()" class="t-btn">📊 Crea Sondaggio</button>
+                    <button onclick="Titan.api.createPrediction()" class="t-btn">🔮 Crea Pronostico</button>
+                    <button onclick="Titan.mod.send('/announcement Titolo!')" class="t-btn">📢 Annuncio Mod</button>
+                    <button onclick="Titan.mod.send('/marker')" class="t-btn">📍 Aggiungi Marcatore</button>
+                    <button id="shield-toggle" onclick="Titan.mod.toggleShield()" class="t-btn t-btn-danger mt-4 justify-center">🛡️ ATTIVA SCUDO</button>
+                </div>
+            </div>
 
-        <main class="stream-viewport">
-            <div id="video-embed" class="w-full h-full flex items-center justify-center bg-black">
-                <div class="text-zinc-700 font-mono text-xs">WAINTING FOR HANDSHAKE...</div>
+            <div class="panel h-1/2">
+                <div class="panel-header">
+                    <span>Custom Macros</span>
+                    <span class="text-green-400">Quick Paste</span>
+                </div>
+                <div class="panel-content flex flex-col gap-2">
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="macro-input" class="t-input h-8" placeholder="Nuovo comando...">
+                        <button onclick="Titan.macros.add()" class="bg-indigo-600 px-3 rounded text-xs">+</button>
+                    </div>
+                    <div id="macro-list" class="overflow-y-auto">
+                        </div>
+                </div>
+            </div>
+        </aside>
+
+        <main id="titan-main-panel" class="titan-main">
+            <div id="video-placeholder" class="w-full h-full flex flex-col items-center justify-center bg-black gap-4">
+                <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-xs font-mono text-zinc-500 uppercase tracking-widest">Synchronizing Video Feed...</span>
             </div>
         </main>
 
-        <div class="bottom-shelf">
-            <div class="panel-box">
-                <div class="panel-title">
-                    <span>Quick Actions</span>
-                    <span class="text-indigo-500">Live Mod</span>
+        <div class="titan-bottom-center">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>AutoMod Queue</span>
+                    <span class="text-orange-400">Intercepted</span>
                 </div>
-                <div class="mod-grid">
-                    <button onclick="Titan.mod.execute('/clear')" class="mod-btn">🧹 Clear Chat</button>
-                    <button id="btn-subs" onclick="Titan.mod.execute('/subsonly')" class="mod-btn">💎 Subs Only</button>
-                    <button id="btn-emote" onclick="Titan.mod.execute('/emoteonly')" class="mod-btn">😊 Emote Only</button>
-                    <button onclick="Titan.mod.execute('/slow 10')" class="mod-btn">🐢 Slow 10s</button>
-                    <button onclick="Titan.mod.execute('/followers 0')" class="mod-btn">👥 Follow Only</button>
-                    <button onclick="Titan.mod.execute('/uniquechat')" class="mod-btn">🚫 No Spam</button>
+                <div id="automod-feed" class="panel-content font-mono text-[10px] text-zinc-400">
+                    Nessun messaggio intercettato al momento.
                 </div>
             </div>
-            <div class="panel-box">
-                <div class="panel-title">
-                    <span>Security Protocol</span>
-                    <span class="text-red-500">Shield</span>
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Ban & Timeout Feed</span>
+                    <span class="text-red-400">Security Log</span>
                 </div>
-                <div class="p-4 flex flex-col h-full">
-                    <div class="bg-red-900/10 border border-red-900/20 p-3 rounded mb-4">
-                        <p class="text-[11px] text-red-200">Il protocollo Scudo attiva restrizioni massime e pulisce la chat istantaneamente.</p>
-                    </div>
-                    <button id="shield-trigger" onclick="Titan.mod.toggleShield()" class="mt-auto w-full py-4 rounded font-black text-xs border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition">
-                        EXECUTE LOCKDOWN PROTOCOL
-                    </button>
+                <div id="ban-feed" class="panel-content font-mono text-[10px] text-zinc-500">
+                    // Monitoring real-time ban events...
                 </div>
             </div>
         </div>
 
-        <aside class="chat-sidebar">
-            <div class="panel-title">
-                <span>Chat Console</span>
-                <span id="chat-latency" class="text-[9px] text-zinc-500">--ms</span>
+        <aside class="titan-chat-area">
+            <div class="panel-header">
+                <span>Chat Real-Time</span>
+                <span id="chat-latency" class="text-[9px] text-zinc-500 tracking-tighter">0ms</span>
             </div>
-            <div id="chat-flow"></div>
+            
+            <div id="chat-render"></div>
+
             <div class="p-3 bg-zinc-900/50 border-t border-zinc-800">
-                <div class="relative">
-                    <input type="text" id="chat-sender" class="w-full bg-black border border-zinc-700 rounded p-2 text-xs text-white focus:border-indigo-500 outline-none" placeholder="Send as Moderator...">
-                    <div class="absolute right-2 top-2 text-[10px] text-zinc-600 font-mono">MOD</div>
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center px-1">
+                        <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Moderator Input</span>
+                        <div class="flex gap-2">
+                            <button onclick="Titan.mod.send('/clear')" title="Clear Chat" class="text-zinc-500 hover:text-white">🗑️</button>
+                            <button onclick="Titan.mod.send('/subsonly')" title="Subs Only" class="text-zinc-500 hover:text-white">💎</button>
+                            <button onclick="Titan.mod.send('/emoteonly')" title="Emote Only" class="text-zinc-500 hover:text-white">😊</button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="chat-input" class="t-input pr-12" placeholder="Invia un messaggio o comando...">
+                        <button onclick="Titan.chat.submit()" class="absolute right-2 top-2 text-indigo-500 font-bold text-xs">SEND</button>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -388,41 +375,34 @@
     </div>
 
     <script>
-        /**
-         * TITAN v4.0.2 - SINGLE PAGE APPLICATION CORE
-         * Architettura modulare progettata per stabilità e scalabilità.
-         */
         const Titan = {
             state: {
                 token: null,
                 user: null,
                 channel: null,
                 client: null,
-                isShield: false,
-                isSubs: false,
-                isEmote: false,
-                metrics: {
-                    messages: 0,
-                    start: Date.now()
-                }
+                shield: false,
+                macros: JSON.parse(localStorage.getItem('titan_macros') || '[]'),
+                logs: []
             },
 
             config: {
                 clientId: 'uqf5d6at2fnet8w5tylz17l2sb4onx',
-                // Calcolo dinamico del redirect URI basato sull'ambiente
                 redirectUri: window.location.origin + window.location.pathname,
                 scopes: [
                     'chat:read', 'chat:edit', 'channel:moderate',
                     'moderator:manage:chat_settings', 'moderator:manage:banned_users',
-                    'moderator:read:chatters', 'user:read:email'
+                    'moderator:manage:chat_messages', 'moderator:manage:announcements',
+                    'channel:manage:polls', 'channel:manage:predictions',
+                    'moderator:read:automod_settings', 'user:read:email'
                 ].join(' ')
             },
 
             /**
-             * MODULO AUTH: Gestione identità e permessi
+             * AUTH MODULE
              */
             auth: {
-                start() {
+                connect() {
                     const url = `https://id.twitch.tv/oauth2/authorize?client_id=${Titan.config.clientId}&redirect_uri=${encodeURIComponent(Titan.config.redirectUri)}&response_type=token&scope=${encodeURIComponent(Titan.config.scopes)}`;
                     window.location.href = url;
                 },
@@ -432,55 +412,49 @@
                     if (hash.includes('access_token')) {
                         const params = new URLSearchParams(hash.substring(1));
                         Titan.state.token = params.get('access_token');
-                        
-                        // Pulizia URL
                         window.history.pushState({}, document.title, window.location.pathname);
-                        
-                        this.logToBox("> Token detected. Authenticating...");
+                        this.log("> Handshake successful. Validating token...");
                         await this.validate();
                     }
                 },
 
                 async validate() {
                     try {
-                        const resp = await fetch('https://api.twitch.tv/helix/users', {
-                            headers: {
-                                'Authorization': `Bearer ${Titan.state.token}`,
-                                'Client-ID': Titan.config.clientId
-                            }
+                        const r = await fetch('https://api.twitch.tv/helix/users', {
+                            headers: { 'Authorization': `Bearer ${Titan.state.token}`, 'Client-ID': Titan.config.clientId }
                         });
-                        const data = await resp.json();
+                        const data = await r.json();
                         Titan.state.user = data.data[0];
                         
-                        this.logToBox(`> Identity: ${Titan.state.user.login}`);
-                        this.askChannel();
+                        this.log(`> Operator Identified: ${Titan.state.user.login}`);
+                        this.promptChannel();
                     } catch (e) {
-                        this.logToBox("> CRITICAL ERROR: Validation failed.");
-                        console.error(e);
+                        this.log(`> FATAL ERROR: ${e.message}`);
                     }
                 },
 
-                askChannel() {
-                    const channel = prompt("DIGITA IL NOME DEL CANALE DA MODERARE:");
-                    if (channel) {
-                        Titan.state.channel = channel.toLowerCase().trim();
-                        Titan.initApp();
+                promptChannel() {
+                    const target = prompt("ID CANALE DA MODERARE:");
+                    if (target) {
+                        Titan.state.channel = target.toLowerCase().trim();
+                        Titan.init();
                     } else {
-                        window.location.reload();
+                        location.reload();
                     }
                 },
 
-                logToBox(msg) {
-                    const box = document.getElementById('auth-status-box');
+                log(msg) {
+                    const box = document.getElementById('auth-log');
                     box.innerHTML += `<br>${msg}`;
+                    box.scrollTop = box.scrollHeight;
                 }
             },
 
             /**
-             * MODULO BOT: Connessione IRC e gestione messaggi
+             * CHAT MODULE (IRC)
              */
-            bot: {
-                connect() {
+            chat: {
+                init() {
                     Titan.state.client = new tmi.Client({
                         options: { debug: false },
                         connection: { reconnect: true, secure: true },
@@ -491,195 +465,227 @@
                         channels: [Titan.state.channel]
                     });
 
-                    Titan.state.client.connect()
-                        .then(() => Titan.ui.notify('Connessione IRC stabilita.', 'green'))
-                        .catch(err => Titan.ui.notify(`Errore IRC: ${err}`, 'red'));
-
-                    this.registerEvents();
+                    Titan.state.client.connect().catch(console.error);
+                    this.bindEvents();
                 },
 
-                registerEvents() {
-                    const client = Titan.state.client;
+                bindEvents() {
+                    const c = Titan.state.client;
 
-                    client.on('message', (chan, tags, msg, self) => {
-                        Titan.state.metrics.messages++;
-                        Titan.ui.renderMessage(tags, msg);
-                        
-                        // Auto-Mod logic locale
-                        if (!self) this.analyzeMessage(tags, msg);
+                    c.on('connected', () => {
+                        Titan.ui.setStatus('Online', 'status-green');
+                        Titan.ui.systemMsg(`Sincronizzazione completata con #${Titan.state.channel}`, 'status-blue');
                     });
 
-                    client.on('connected', () => {
-                        document.getElementById('status-led').className = 'w-2 h-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50';
-                        document.getElementById('status-text').innerText = 'Online';
-                        document.getElementById('status-text').className = 'text-[10px] font-bold text-green-500 uppercase';
+                    c.on('message', (chan, tags, msg, self) => {
+                        this.render(tags, msg);
                     });
 
-                    client.on('disconnected', () => {
-                        document.getElementById('status-led').className = 'w-2 h-2 rounded-full bg-red-600';
-                        document.getElementById('status-text').innerText = 'Offline';
-                        document.getElementById('status-text').className = 'text-[10px] font-bold text-red-500 uppercase';
+                    c.on('ban', (chan, user, reason) => {
+                        Titan.ui.logSecurity(`BAN: ${user} - Motivo: ${reason || 'Nessuno'}`);
                     });
 
-                    // Update Latency
-                    client.on('ping', () => {
-                        const lat = Math.floor(Math.random() * 20) + 15; // Mock latency check
-                        document.getElementById('chat-latency').innerText = `${lat}ms`;
+                    c.on('timeout', (chan, user, reason, duration) => {
+                        Titan.ui.logSecurity(`TIMEOUT: ${user} per ${duration}s`);
+                    });
+
+                    // Input Listener
+                    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') this.submit();
                     });
                 },
 
-                analyzeMessage(tags, msg) {
-                    // Semplice controllo spam link
-                    if (msg.includes('http') && !tags.mod) {
-                        Titan.ui.notify(`Link rilevato da ${tags.username}`, 'orange');
+                submit() {
+                    const input = document.getElementById('chat-input');
+                    if (input.value) {
+                        Titan.mod.send(input.value);
+                        input.value = '';
                     }
                 },
 
-                say(msg) {
-                    if (Titan.state.client) {
-                        Titan.state.client.say(Titan.state.channel, msg);
-                    }
+                render(tags, msg) {
+                    const container = document.getElementById('chat-render');
+                    const div = document.createElement('div');
+                    div.className = 'chat-msg group';
+                    
+                    const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                    const color = tags.color || '#9147ff';
+                    const isMod = tags.mod || tags.badges?.broadcaster === '1';
+
+                    div.innerHTML = `
+                        <div class="absolute right-2 top-1 hidden group-hover:flex gap-2 bg-zinc-800 p-1 rounded border border-zinc-700">
+                            <button onclick="Titan.mod.send('/delete ${tags.id}')" class="hover:text-red-500">🗑️</button>
+                            <button onclick="Titan.mod.send('/timeout ${tags.username} 600')" class="hover:text-orange-500">⏱️</button>
+                        </div>
+                        <span class="msg-meta">${time}</span>
+                        ${isMod ? '<span class="text-green-500 mr-1">🛡️</span>' : ''}
+                        <span style="color: ${color}" class="msg-author">${tags['display-name']}</span>: 
+                        <span class="msg-body">${msg}</span>
+                    `;
+
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                    if (container.children.length > 100) container.removeChild(container.firstChild);
                 }
             },
 
             /**
-             * MODULO MOD: Esecuzione comandi moderatore
+             * MODERATION ACTIONS
              */
             mod: {
-                execute(cmd) {
-                    Titan.bot.say(cmd);
-                    Titan.ui.notify(`Eseguito: ${cmd}`, 'blue');
-                    
-                    // Update UI state
-                    if (cmd === '/subsonly') document.getElementById('btn-subs').classList.add('mod-btn-active');
-                    if (cmd === '/subsonlyoff') document.getElementById('btn-subs').classList.remove('mod-btn-active');
+                send(cmd) {
+                    if (Titan.state.client) {
+                        Titan.state.client.say(Titan.state.channel, cmd);
+                        if (cmd.startsWith('/')) {
+                            Titan.ui.systemMsg(`Eseguito comando: ${cmd}`, 'status-orange');
+                        }
+                    }
                 },
 
                 toggleShield() {
-                    Titan.state.isShield = !Titan.state.isShield;
-                    const btn = document.getElementById('shield-trigger');
+                    Titan.state.shield = !Titan.state.shield;
+                    const btn = document.getElementById('shield-toggle');
+                    const panel = document.getElementById('titan-main-panel');
                     
-                    if (Titan.state.isShield) {
-                        this.execute('/subsonly');
-                        this.execute('/emoteonly');
-                        this.execute('/slow 30');
-                        this.execute('/clear');
-                        btn.innerText = "SHIELD PROTOCOL ACTIVE (CANCEL)";
-                        btn.classList.add('shield-active');
-                        Titan.ui.notify("LOCKDOWN ATTIVATO", "red");
+                    if (Titan.state.shield) {
+                        this.send('/subsonly');
+                        this.send('/emoteonly');
+                        this.send('/slow 30');
+                        btn.innerText = "🛡️ DISATTIVA SCUDO";
+                        btn.classList.add('t-btn-purple');
+                        panel.classList.add('shield-active-mode');
+                        Titan.ui.systemMsg("PROTOCOLLO SCUDO ATTIVATO", "status-red");
                     } else {
-                        this.execute('/subsonlyoff');
-                        this.execute('/emoteonlyoff');
-                        this.execute('/slowoff');
-                        btn.innerText = "EXECUTE LOCKDOWN PROTOCOL";
-                        btn.classList.remove('shield-active');
-                        Titan.ui.notify("LOCKDOWN DISATTIVATO", "green");
+                        this.send('/subsonlyoff');
+                        this.send('/emoteonlyoff');
+                        this.send('/slowoff');
+                        btn.innerText = "🛡️ ATTIVA SCUDO";
+                        btn.classList.remove('t-btn-purple');
+                        panel.classList.remove('shield-active-mode');
+                        Titan.ui.systemMsg("PROTOCOLLO SCUDO DISATTIVATO", "status-green");
                     }
-                },
-
-                deleteMsg(id) {
-                    this.execute(`/delete ${id}`);
-                },
-
-                timeoutUser(user) {
-                    this.execute(`/timeout ${user} 600`);
                 }
             },
 
             /**
-             * MODULO UI: Gestione interfaccia grafica
+             * API & EXTERNAL TOOLS
+             */
+            api: {
+                async createPoll() {
+                    const title = prompt("Titolo Sondaggio:");
+                    if (!title) return;
+                    Titan.mod.send(`/poll ${title} | Sì | No`);
+                },
+
+                async createPrediction() {
+                    const title = prompt("Titolo Pronostico:");
+                    if (!title) return;
+                    Titan.mod.send(`/prediction ${title}`);
+                }
+            },
+
+            /**
+             * MACROS MODULE
+             */
+            macros: {
+                render() {
+                    const list = document.getElementById('macro-list');
+                    list.innerHTML = '';
+                    Titan.state.macros.forEach((m, idx) => {
+                        const div = document.createElement('div');
+                        div.className = 'macro-item flex justify-between items-center';
+                        div.innerHTML = `
+                            <span onclick="Titan.mod.send('${m}')" class="truncate text-[10px] font-mono">${m}</span>
+                            <button onclick="Titan.macros.remove(${idx})" class="text-zinc-600 hover:text-red-500">×</button>
+                        `;
+                        list.appendChild(div);
+                    });
+                },
+
+                add() {
+                    const input = document.getElementById('macro-input');
+                    if (input.value) {
+                        Titan.state.macros.push(input.value);
+                        localStorage.setItem('titan_macros', JSON.stringify(Titan.state.macros));
+                        input.value = '';
+                        this.render();
+                    }
+                },
+
+                remove(idx) {
+                    Titan.state.macros.splice(idx, 1);
+                    localStorage.setItem('titan_macros', JSON.stringify(Titan.state.macros));
+                    this.render();
+                }
+            },
+
+            /**
+             * UI MODULE
              */
             ui: {
                 init() {
-                    document.getElementById('auth-overlay').classList.add('hidden');
+                    document.getElementById('auth-guard').classList.add('hidden');
                     document.getElementById('titan-app').classList.remove('hidden');
                     
-                    // Update User Info
                     document.getElementById('ui-user-avatar').src = Titan.state.user.profile_image_url;
                     document.getElementById('ui-user-name').innerText = Titan.state.user.display_name;
-                    document.getElementById('ui-target-name').innerText = Titan.state.channel.toUpperCase();
+                    document.getElementById('ui-channel-name').innerText = Titan.state.channel.toUpperCase();
 
                     this.loadVideo();
-                    this.setupInput();
+                    Titan.macros.render();
                 },
 
                 loadVideo() {
-                    const domain = window.location.hostname;
-                    document.getElementById('video-embed').innerHTML = `
+                    const parent = window.location.hostname;
+                    document.getElementById('titan-main-panel').innerHTML = `
                         <iframe 
-                            src="https://player.twitch.tv/?channel=${Titan.state.channel}&parent=${domain}&autoplay=true" 
+                            src="https://player.twitch.tv/?channel=${Titan.state.channel}&parent=${parent}&autoplay=true" 
                             height="100%" width="100%" allowfullscreen="true" style="border:none;">
                         </iframe>`;
                 },
 
-                renderMessage(tags, msg) {
-                    const flow = document.getElementById('chat-flow');
-                    const div = document.createElement('div');
-                    div.className = 'msg-line group';
-                    
-                    const color = tags.color || '#9147ff';
-                    const isMod = tags.mod || tags.badges?.broadcaster === '1';
-                    
-                    div.innerHTML = `
-                        <div class="msg-tools">
-                            <button onclick="Titan.mod.deleteMsg('${tags.id}')" class="p-1 hover:text-red-500">🗑️</button>
-                            <button onclick="Titan.mod.timeoutUser('${tags.username}')" class="p-1 hover:text-orange-500">⏱️</button>
-                        </div>
-                        <span class="text-[10px] text-zinc-600 font-mono mr-1">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        ${isMod ? '<span class="text-green-500 font-bold mr-1">🛡️</span>' : ''}
-                        <span style="color: ${color}" class="msg-username">${tags['display-name']}</span>:
-                        <span class="msg-content">${msg}</span>
-                    `;
-
-                    flow.appendChild(div);
-                    flow.scrollTop = flow.scrollHeight;
-
-                    // Cleanup per performance se troppi messaggi (> 150)
-                    if (flow.children.length > 150) flow.removeChild(flow.firstChild);
+                setStatus(text, colorClass) {
+                    const dot = document.getElementById('status-dot');
+                    const label = document.getElementById('status-label');
+                    dot.className = `w-2 h-2 rounded-full shadow-lg ${colorClass === 'status-green' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-red-500'}`;
+                    label.innerText = text;
+                    label.className = `text-[10px] font-bold uppercase ${colorClass === 'status-green' ? 'text-emerald-500' : 'text-red-500'}`;
                 },
 
-                setupInput() {
-                    const input = document.getElementById('chat-sender');
-                    input.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter' && input.value) {
-                            Titan.bot.say(input.value);
-                            input.value = '';
-                        }
-                    });
-                },
-
-                notify(text, type = 'zinc') {
-                    const flow = document.getElementById('chat-flow');
+                systemMsg(text, type) {
+                    const container = document.getElementById('chat-render');
                     const div = document.createElement('div');
                     const colors = {
-                        green: 'text-green-400',
-                        red: 'text-red-400',
-                        orange: 'text-orange-400',
-                        blue: 'text-indigo-400',
-                        zinc: 'text-zinc-500'
+                        'status-green': 'border-emerald-500 text-emerald-400',
+                        'status-red': 'border-red-500 text-red-400',
+                        'status-blue': 'border-indigo-500 text-indigo-400',
+                        'status-orange': 'border-orange-500 text-orange-400'
                     };
-                    div.className = `p-2 my-1 bg-black/40 border-l-2 border-current text-[11px] font-mono ${colors[type]}`;
+                    div.className = `p-2 my-1 bg-black/50 border-l-2 ${colors[type]} text-[10px] font-mono`;
                     div.innerText = `[SYSTEM] ${text}`;
-                    flow.appendChild(div);
-                    flow.scrollTop = flow.scrollHeight;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                },
+
+                logSecurity(text) {
+                    const feed = document.getElementById('ban-feed');
+                    const div = document.createElement('div');
+                    div.className = 'mb-1 border-b border-zinc-800 pb-1';
+                    div.innerHTML = `<span class="text-zinc-600">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+                    feed.prepend(div);
                 }
             },
 
             /**
-             * AVVIO APPLICAZIONE
+             * MAIN INITIALIZER
              */
-            initApp() {
+            init() {
                 this.ui.init();
-                this.bot.connect();
-                
-                // Keep Alive Heartbeat
-                setInterval(() => {
-                    console.log(`Titan Heartbeat | Msg Count: ${this.state.metrics.messages}`);
-                }, 60000);
+                this.chat.init();
             }
         };
 
-        // Inizializzazione al caricamento
+        // Bootstrap
         window.onload = () => Titan.auth.check();
     </script>
 </body>
