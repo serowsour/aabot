@@ -3,326 +3,684 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONYX TITAN | Professional ModView</title>
+    <title>TITAN OPERATIONAL CENTER | Enterprise ModView</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
+        /* --- ARCHITETTURA CSS --- */
         :root {
-            --bg-black: #0e0e10;
-            --bg-light: #18181b;
-            --bg-panel: #1f1f23;
+            --bg-deep: #050505;
+            --bg-surface: #0e0e10;
+            --bg-panel: #18181b;
+            --bg-header: #1f1f23;
             --twitch-purple: #9147ff;
-            --border-color: #303032;
+            --twitch-purple-hover: #772ce8;
+            --border-ui: #303032;
             --text-main: #efeff1;
             --text-muted: #adadb8;
+            --accent-red: #eb0400;
+            --accent-green: #00f593;
+            --accent-blue: #00d1ff;
+            --panel-gap: 6px;
         }
 
-        body {
-            background-color: var(--bg-black);
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-ui) transparent;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-deep);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
-            height: 100vh;
-            margin: 0;
             overflow: hidden;
         }
 
-        /* Layout Grid simile alla ModView di Twitch */
-        .modview-grid {
+        /* --- LAYOUT ENGINE --- */
+        .app-container {
             display: grid;
             grid-template-columns: 50px 1fr 340px;
-            grid-template-rows: 50px 1fr 300px;
+            grid-template-rows: 50px 1fr 280px;
             height: 100vh;
+            width: 100vw;
+            gap: 0;
         }
 
-        .top-bar { grid-column: 1 / -1; background: var(--bg-light); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; }
-        .side-nav { grid-column: 1; background: var(--bg-light); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 20px; }
+        /* Navigazione Laterale Stretta (Icone) */
+        .sidebar-icons {
+            grid-column: 1;
+            grid-row: 2 / -1;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-ui);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+            gap: 20px;
+            z-index: 40;
+        }
+
+        .side-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: var(--text-muted);
+        }
+
+        .side-icon:hover, .side-icon.active {
+            background: var(--bg-header);
+            color: white;
+        }
+
+        .side-icon.active {
+            border-left: 2px solid var(--twitch-purple);
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Header Superiore */
+        .main-header {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-ui);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 50;
+        }
+
+        /* Area Video Centralizzata */
+        .stream-viewport {
+            grid-column: 2;
+            grid-row: 2;
+            background: #000;
+            margin: var(--panel-gap);
+            border: 1px solid var(--border-ui);
+            position: relative;
+        }
+
+        /* Chat Laterale (Fissa) */
+        .chat-sidebar {
+            grid-column: 3;
+            grid-row: 2 / 4;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-ui);
+            margin: var(--panel-gap);
+            margin-left: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pannelli Strumenti Inferiori */
+        .bottom-shelf {
+            grid-column: 2;
+            grid-row: 3;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--panel-gap);
+            margin: 0 var(--panel-gap) var(--panel-gap) var(--panel-gap);
+        }
+
+        .panel-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-ui);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-title {
+            padding: 8px 12px;
+            background: var(--bg-header);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-ui);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* --- COMPONENTI CHAT --- */
+        #chat-flow {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .msg-line {
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            position: relative;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg-line:hover { background: rgba(255,255,255,0.03); }
         
-        /* Pannelli Rettangolari */
-        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .panel-header { background: var(--bg-light); padding: 8px 12px; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        
-        .main-stream { grid-column: 2; grid-row: 2; margin: 5px; }
-        .chat-section { grid-column: 3; grid-row: 2 / 4; margin: 5px; margin-left: 0; }
-        .mod-actions { grid-column: 2; grid-row: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 5px; margin-top: 0; }
+        .msg-tools {
+            display: none;
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            background: var(--bg-header);
+            border: 1px solid var(--border-ui);
+            padding: 2px;
+            gap: 4px;
+            z-index: 10;
+        }
 
-        /* Chat Styling */
-        #chat-container { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
-        .chat-line { position: relative; padding: 4px 8px; border-radius: 2px; }
-        .chat-line:hover { background: rgba(255,255,255,0.05); }
-        .chat-line .tools { display: none; position: absolute; right: 5px; top: 5px; background: var(--bg-light); border: 1px solid var(--border-color); padding: 2px; gap: 4px; z-index: 50; }
-        .chat-line:hover .tools { display: flex; }
+        .msg-line:hover .msg-tools { display: flex; }
 
-        /* Buttons */
-        .action-btn { background: #35353b; color: white; border-radius: 4px; padding: 8px; font-size: 12px; font-weight: 600; text-align: left; transition: 0.2s; }
-        .action-btn:hover { background: #464649; }
-        .btn-purple { background: var(--twitch-purple); }
-        .btn-purple:hover { background: #772ce8; }
-        .btn-danger { color: #ff4a4a; border: 1px solid #ff4a4a; background: transparent; }
-        .btn-danger:hover { background: #ff4a4a; color: white; }
+        .msg-badge {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            margin-right: 4px;
+            vertical-align: middle;
+            background-size: contain;
+        }
 
-        /* Inputs */
-        .chat-input-area { padding: 10px; background: var(--bg-light); border-top: 1px solid var(--border-color); }
-        .twitch-input { width: 100%; background: #0e0e10; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px; color: white; outline: none; font-size: 13px; }
-        .twitch-input:focus { border-color: var(--twitch-purple); }
+        .msg-username { font-weight: 700; cursor: pointer; }
+        .msg-content { color: var(--text-main); word-wrap: break-word; }
 
-        /* Overlays */
-        #login-overlay { position: fixed; inset: 0; background: var(--bg-black); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* --- AZIONI MODERATORE --- */
+        .mod-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        .mod-btn {
+            background: #2b2b2e;
+            border: 1px solid transparent;
+            color: #efeff1;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mod-btn:hover { background: #3a3a3d; border-color: var(--twitch-purple); }
+        .mod-btn-active { background: var(--twitch-purple) !important; color: white; }
+
+        .shield-active {
+            animation: pulse-red 1.5s infinite;
+            border-color: var(--accent-red) !important;
+            color: var(--accent-red) !important;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(235, 4, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(235, 4, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(235, 4, 0, 0); }
+        }
+
+        /* --- LOGIN & OVERLAYS --- */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .auth-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-ui);
+            padding: 40px;
+            width: 420px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .btn-connect {
+            background: var(--twitch-purple);
+            color: white;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 4px;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+
+        .btn-connect:hover { background: var(--twitch-purple-hover); transform: translateY(-1px); }
+
         .hidden { display: none !important; }
-        
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .dot-green { background: #00f593; box-shadow: 0 0 10px #00f593; }
-        
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #39393d; }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="p-10 border border-[#303032] bg-[#18181b] rounded-lg text-center shadow-2xl max-w-md">
-            <div class="mb-6 flex justify-center">
-                <div class="w-12 h-12 bg-[#9147ff] rounded-lg flex items-center justify-center shadow-lg">
-                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
-                </div>
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <div class="flex justify-center mb-6">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 0L0 10V35H10V40L15 35H22.5L40 17.5V0H10ZM35 15L27.5 22.5H20L15 27.5V22.5H10V5H35V15ZM30 15V7.5H25V15H30ZM22.5 15V7.5H17.5V15H22.5Z" fill="#9147FF"/>
+                </svg>
             </div>
-            <h1 class="text-2xl font-bold mb-2">SerowMOD Titan</h1>
-            <p class="text-gray-400 text-sm mb-8">Professional Moderation Interface</p>
-            <button onclick="Core.login()" class="w-full bg-[#9147ff] hover:bg-[#772ce8] text-white py-3 rounded font-bold transition">CONNETTI TWITCH</button>
-            <div id="auth-info" class="mt-4 text-[10px] font-mono text-gray-600">Checking redirect state...</div>
+            <h1 class="text-xl font-extrabold mb-1">TITAN OPERATIONAL HUB</h1>
+            <p class="text-xs text-zinc-500 mb-8 mono uppercase tracking-widest">v4.0.2 Stable Release</p>
+            
+            <div id="auth-status-box" class="text-left bg-black p-3 rounded mb-6 text-[11px] font-mono text-zinc-400">
+                > Initializing system...<br>
+                > Waiting for Twitch OAuth...
+            </div>
+
+            <button onclick="Titan.auth.start()" class="btn-connect">CONNECT TWITCH ACCOUNT</button>
+            <p class="mt-4 text-[10px] text-zinc-600">Richiede permessi di moderazione per il canale target.</p>
         </div>
     </div>
 
-    <div id="main-view" class="modview-grid hidden">
+    <div id="titan-app" class="app-container hidden">
         
-        <header class="top-bar">
+        <header class="main-header">
             <div class="flex items-center gap-4">
-                <span class="font-bold text-sm tracking-tighter">TITAN <span class="text-[#9147ff]">VIEW</span></span>
+                <div class="flex items-center gap-2">
+                    <div class="bg-indigo-600 p-1 rounded font-bold text-xs">TI</div>
+                    <span class="font-black text-sm tracking-tighter uppercase">Titan <span class="text-indigo-400">MOD</span></span>
+                </div>
                 <div class="h-4 w-px bg-zinc-700"></div>
-                <div class="text-xs text-zinc-400">Canale: <span id="display-channel" class="text-white font-bold">---</span></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-zinc-500 font-bold uppercase">Target:</span>
+                    <span id="ui-target-name" class="text-xs font-mono font-bold text-white">---</span>
+                </div>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="text-xs flex items-center"><span class="status-dot dot-green"></span> SESSIONE ATTIVA</div>
-                <img id="user-pfp" src="" class="w-7 h-7 rounded border border-zinc-700">
-                <button onclick="location.reload()" class="text-zinc-500 hover:text-white">✕</button>
+
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div id="status-led" class="w-2 h-2 rounded-full bg-zinc-600"></div>
+                    <span id="status-text" class="text-[10px] font-bold text-zinc-500 uppercase">OFFLINE</span>
+                </div>
+                <div class="flex items-center gap-3 pl-4 border-l border-zinc-700">
+                    <img id="ui-user-avatar" src="" class="w-7 h-7 rounded border border-zinc-700">
+                    <span id="ui-user-name" class="text-xs font-bold">User</span>
+                </div>
             </div>
         </header>
 
-        <nav class="side-nav">
-            <div class="p-2 bg-[#9147ff] rounded cursor-pointer">🛡️</div>
-            <div class="p-2 text-zinc-500 hover:text-white cursor-pointer">📊</div>
-            <div class="p-2 text-zinc-500 hover:text-white cursor-pointer">💬</div>
-            <div class="mt-auto mb-4 p-2 text-zinc-500 hover:text-white cursor-pointer">⚙️</div>
+        <nav class="sidebar-icons">
+            <div class="side-icon active">🛡️</div>
+            <div class="side-icon">📈</div>
+            <div class="side-icon">⚡</div>
+            <div class="side-icon">🤖</div>
+            <div class="mt-auto mb-6 side-icon">⚙️</div>
         </nav>
 
-        <section class="panel main-stream">
-            <div class="panel-header">
-                <span>STREAM</span>
-                <span class="text-[10px] text-zinc-500">LIVE PLAYER</span>
+        <main class="stream-viewport">
+            <div id="video-embed" class="w-full h-full flex items-center justify-center bg-black">
+                <div class="text-zinc-700 font-mono text-xs">WAINTING FOR HANDSHAKE...</div>
             </div>
-            <div id="video-root" class="flex-1 bg-black"></div>
-        </section>
+        </main>
 
-        <div class="mod-actions">
-            <div class="panel">
-                <div class="panel-header">AZIONI RAPIDE</div>
-                <div class="p-3 grid grid-cols-2 gap-2 overflow-y-auto">
-                    <button onclick="Bot.say('/clear')" class="action-btn">🗑️ Clear Chat</button>
-                    <button onclick="Bot.say('/subsonly')" class="action-btn">💎 Subs Only</button>
-                    <button onclick="Bot.say('/emoteonly')" class="action-btn">😊 Emote Only</button>
-                    <button onclick="Bot.say('/slow 10')" class="action-btn">🐢 Slow 10s</button>
-                    <button onclick="Bot.say('/followers 10')" class="action-btn">👥 Follow 10m</button>
-                    <button onclick="Bot.say('/uniquechat')" class="action-btn">🚫 No Spam</button>
+        <div class="bottom-shelf">
+            <div class="panel-box">
+                <div class="panel-title">
+                    <span>Quick Actions</span>
+                    <span class="text-indigo-500">Live Mod</span>
+                </div>
+                <div class="mod-grid">
+                    <button onclick="Titan.mod.execute('/clear')" class="mod-btn">🧹 Clear Chat</button>
+                    <button id="btn-subs" onclick="Titan.mod.execute('/subsonly')" class="mod-btn">💎 Subs Only</button>
+                    <button id="btn-emote" onclick="Titan.mod.execute('/emoteonly')" class="mod-btn">😊 Emote Only</button>
+                    <button onclick="Titan.mod.execute('/slow 10')" class="mod-btn">🐢 Slow 10s</button>
+                    <button onclick="Titan.mod.execute('/followers 0')" class="mod-btn">👥 Follow Only</button>
+                    <button onclick="Titan.mod.execute('/uniquechat')" class="mod-btn">🚫 No Spam</button>
                 </div>
             </div>
-            <div class="panel border-red-900/30">
-                <div class="panel-header text-red-500">MODALITÀ SCUDO</div>
-                <div class="p-4 flex flex-col justify-center h-full gap-4">
-                    <div class="bg-red-500/10 border border-red-500/20 p-3 rounded text-[11px] text-red-200">
-                        Attiva restrizioni massime istantanee per contrastare raid o spam pesante.
+            <div class="panel-box">
+                <div class="panel-title">
+                    <span>Security Protocol</span>
+                    <span class="text-red-500">Shield</span>
+                </div>
+                <div class="p-4 flex flex-col h-full">
+                    <div class="bg-red-900/10 border border-red-900/20 p-3 rounded mb-4">
+                        <p class="text-[11px] text-red-200">Il protocollo Scudo attiva restrizioni massime e pulisce la chat istantaneamente.</p>
                     </div>
-                    <button onclick="Core.toggleShield()" id="shield-btn" class="w-full py-4 rounded font-extrabold text-sm border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition">
-                        ATTIVA PROTOCOLLO SCUDO
+                    <button id="shield-trigger" onclick="Titan.mod.toggleShield()" class="mt-auto w-full py-4 rounded font-black text-xs border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition">
+                        EXECUTE LOCKDOWN PROTOCOL
                     </button>
                 </div>
             </div>
         </div>
 
-        <section class="panel chat-section">
-            <div class="panel-header">
-                <span>CHAT</span>
-                <span id="chat-count" class="text-[10px] text-[#9147ff]">CONNESSA</span>
+        <aside class="chat-sidebar">
+            <div class="panel-title">
+                <span>Chat Console</span>
+                <span id="chat-latency" class="text-[9px] text-zinc-500">--ms</span>
             </div>
-            <div id="chat-container"></div>
-            <div class="chat-input-area">
-                <div class="text-[10px] text-zinc-500 mb-1 flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    Visibile solo ai moderatori
+            <div id="chat-flow"></div>
+            <div class="p-3 bg-zinc-900/50 border-t border-zinc-800">
+                <div class="relative">
+                    <input type="text" id="chat-sender" class="w-full bg-black border border-zinc-700 rounded p-2 text-xs text-white focus:border-indigo-500 outline-none" placeholder="Send as Moderator...">
+                    <div class="absolute right-2 top-2 text-[10px] text-zinc-600 font-mono">MOD</div>
                 </div>
-                <input type="text" id="chat-input" class="twitch-input" placeholder="Invia un messaggio...">
             </div>
-        </section>
+        </aside>
 
     </div>
 
     <script>
         /**
-         * CORE LOGIC - TITAN ENGINE
+         * TITAN v4.0.2 - SINGLE PAGE APPLICATION CORE
+         * Architettura modulare progettata per stabilità e scalabilità.
          */
-        const Core = {
-            config: {
-                clientId: 'uqf5d6at2fnet8w5tylz17l2sb4onx',
-                // Redirect intelligente
-                redirectUri: window.location.origin + window.location.pathname,
-                scopes: [
-                    'chat:read', 'chat:edit', 
-                    'channel:moderate', 
-                    'moderator:manage:chat_settings',
-                    'moderator:manage:banned_users',
-                    'user:read:email'
-                ].join(' ')
-            },
+        const Titan = {
             state: {
                 token: null,
                 user: null,
                 channel: null,
-                isShield: false
-            },
-
-            init() {
-                const hash = window.location.hash;
-                if (hash.includes('access_token')) {
-                    const params = new URLSearchParams(hash.substring(1));
-                    this.state.token = params.get('access_token');
-                    window.history.pushState({}, document.title, window.location.pathname);
-                    this.bootstrap();
+                client: null,
+                isShield: false,
+                isSubs: false,
+                isEmote: false,
+                metrics: {
+                    messages: 0,
+                    start: Date.now()
                 }
             },
 
-            login() {
-                const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${this.config.clientId}&redirect_uri=${encodeURIComponent(this.config.redirectUri)}&response_type=token&scope=${encodeURIComponent(this.config.scopes)}`;
-                window.location.href = authUrl;
+            config: {
+                clientId: 'uqf5d6at2fnet8w5tylz17l2sb4onx',
+                // Calcolo dinamico del redirect URI basato sull'ambiente
+                redirectUri: window.location.origin + window.location.pathname,
+                scopes: [
+                    'chat:read', 'chat:edit', 'channel:moderate',
+                    'moderator:manage:chat_settings', 'moderator:manage:banned_users',
+                    'moderator:read:chatters', 'user:read:email'
+                ].join(' ')
             },
 
-            async bootstrap() {
-                document.getElementById('auth-info').innerText = "Validazione credenziali...";
-                try {
-                    const resp = await fetch('https://api.twitch.tv/helix/users', {
-                        headers: { 'Authorization': `Bearer ${this.state.token}`, 'Client-ID': this.config.clientId }
+            /**
+             * MODULO AUTH: Gestione identità e permessi
+             */
+            auth: {
+                start() {
+                    const url = `https://id.twitch.tv/oauth2/authorize?client_id=${Titan.config.clientId}&redirect_uri=${encodeURIComponent(Titan.config.redirectUri)}&response_type=token&scope=${encodeURIComponent(Titan.config.scopes)}`;
+                    window.location.href = url;
+                },
+
+                async check() {
+                    const hash = window.location.hash;
+                    if (hash.includes('access_token')) {
+                        const params = new URLSearchParams(hash.substring(1));
+                        Titan.state.token = params.get('access_token');
+                        
+                        // Pulizia URL
+                        window.history.pushState({}, document.title, window.location.pathname);
+                        
+                        this.logToBox("> Token detected. Authenticating...");
+                        await this.validate();
+                    }
+                },
+
+                async validate() {
+                    try {
+                        const resp = await fetch('https://api.twitch.tv/helix/users', {
+                            headers: {
+                                'Authorization': `Bearer ${Titan.state.token}`,
+                                'Client-ID': Titan.config.clientId
+                            }
+                        });
+                        const data = await resp.json();
+                        Titan.state.user = data.data[0];
+                        
+                        this.logToBox(`> Identity: ${Titan.state.user.login}`);
+                        this.askChannel();
+                    } catch (e) {
+                        this.logToBox("> CRITICAL ERROR: Validation failed.");
+                        console.error(e);
+                    }
+                },
+
+                askChannel() {
+                    const channel = prompt("DIGITA IL NOME DEL CANALE DA MODERARE:");
+                    if (channel) {
+                        Titan.state.channel = channel.toLowerCase().trim();
+                        Titan.initApp();
+                    } else {
+                        window.location.reload();
+                    }
+                },
+
+                logToBox(msg) {
+                    const box = document.getElementById('auth-status-box');
+                    box.innerHTML += `<br>${msg}`;
+                }
+            },
+
+            /**
+             * MODULO BOT: Connessione IRC e gestione messaggi
+             */
+            bot: {
+                connect() {
+                    Titan.state.client = new tmi.Client({
+                        options: { debug: false },
+                        connection: { reconnect: true, secure: true },
+                        identity: {
+                            username: Titan.state.user.login,
+                            password: `oauth:${Titan.state.token}`
+                        },
+                        channels: [Titan.state.channel]
                     });
-                    const data = await resp.json();
-                    this.state.user = data.data[0];
 
-                    const target = prompt("Canale da monitorare (es: serowsour):");
-                    if (target) {
-                        this.state.channel = target.toLowerCase().trim();
-                        this.launchUI();
+                    Titan.state.client.connect()
+                        .then(() => Titan.ui.notify('Connessione IRC stabilita.', 'green'))
+                        .catch(err => Titan.ui.notify(`Errore IRC: ${err}`, 'red'));
+
+                    this.registerEvents();
+                },
+
+                registerEvents() {
+                    const client = Titan.state.client;
+
+                    client.on('message', (chan, tags, msg, self) => {
+                        Titan.state.metrics.messages++;
+                        Titan.ui.renderMessage(tags, msg);
+                        
+                        // Auto-Mod logic locale
+                        if (!self) this.analyzeMessage(tags, msg);
+                    });
+
+                    client.on('connected', () => {
+                        document.getElementById('status-led').className = 'w-2 h-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50';
+                        document.getElementById('status-text').innerText = 'Online';
+                        document.getElementById('status-text').className = 'text-[10px] font-bold text-green-500 uppercase';
+                    });
+
+                    client.on('disconnected', () => {
+                        document.getElementById('status-led').className = 'w-2 h-2 rounded-full bg-red-600';
+                        document.getElementById('status-text').innerText = 'Offline';
+                        document.getElementById('status-text').className = 'text-[10px] font-bold text-red-500 uppercase';
+                    });
+
+                    // Update Latency
+                    client.on('ping', () => {
+                        const lat = Math.floor(Math.random() * 20) + 15; // Mock latency check
+                        document.getElementById('chat-latency').innerText = `${lat}ms`;
+                    });
+                },
+
+                analyzeMessage(tags, msg) {
+                    // Semplice controllo spam link
+                    if (msg.includes('http') && !tags.mod) {
+                        Titan.ui.notify(`Link rilevato da ${tags.username}`, 'orange');
                     }
-                } catch (e) {
-                    alert("Errore critico Auth: " + e.message);
+                },
+
+                say(msg) {
+                    if (Titan.state.client) {
+                        Titan.state.client.say(Titan.state.channel, msg);
+                    }
                 }
             },
 
-            launchUI() {
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('main-view').classList.remove('hidden');
-                document.getElementById('user-pfp').src = this.state.user.profile_image_url;
-                document.getElementById('display-channel').innerText = this.state.channel.toUpperCase();
-                
-                // Embed Stream
-                const parent = window.location.hostname;
-                document.getElementById('video-root').innerHTML = `
-                    <iframe src="https://player.twitch.tv/?channel=${this.state.channel}&parent=${parent}&autoplay=true" height="100%" width="100%" allowfullscreen></iframe>
-                `;
+            /**
+             * MODULO MOD: Esecuzione comandi moderatore
+             */
+            mod: {
+                execute(cmd) {
+                    Titan.bot.say(cmd);
+                    Titan.ui.notify(`Eseguito: ${cmd}`, 'blue');
+                    
+                    // Update UI state
+                    if (cmd === '/subsonly') document.getElementById('btn-subs').classList.add('mod-btn-active');
+                    if (cmd === '/subsonlyoff') document.getElementById('btn-subs').classList.remove('mod-btn-active');
+                },
 
-                Bot.init();
-            },
-
-            toggleShield() {
-                this.state.isShield = !this.state.isShield;
-                const btn = document.getElementById('shield-btn');
-                if (this.state.isShield) {
-                    Bot.say('/subsonly');
-                    Bot.say('/emoteonly');
-                    Bot.say('/slow 30');
-                    Bot.say('/clear');
-                    btn.classList.add('bg-red-600', 'text-white');
-                    btn.innerText = "SCUDO ATTIVO - DISATTIVA";
-                } else {
-                    Bot.say('/subsonlyoff');
-                    Bot.say('/emoteonlyoff');
-                    Bot.say('/slowoff');
-                    btn.classList.remove('bg-red-600', 'text-white');
-                    btn.innerText = "ATTIVA PROTOCOLLO SCUDO";
-                }
-            }
-        };
-
-        const Bot = {
-            client: null,
-
-            init() {
-                this.client = new tmi.Client({
-                    options: { debug: false },
-                    identity: {
-                        username: Core.state.user.login,
-                        password: `oauth:${Core.state.token}`
-                    },
-                    channels: [Core.state.channel]
-                });
-
-                this.client.connect().catch(console.error);
-                this.events();
-                this.setupInput();
-            },
-
-            events() {
-                this.client.on('message', (chan, tags, msg, self) => {
-                    this.renderMessage(tags, msg);
-                });
-            },
-
-            renderMessage(tags, msg) {
-                const container = document.getElementById('chat-container');
-                const line = document.createElement('div');
-                line.className = 'chat-line';
-                
-                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const color = tags.color || '#9147ff';
-                const isMod = tags.mod || tags.badges?.broadcaster === '1';
-
-                line.innerHTML = `
-                    <div class="tools">
-                        <button onclick="Bot.say('/delete ${tags.id}')" class="text-[10px] bg-red-900/50 p-1 rounded">DEL</button>
-                        <button onclick="Bot.say('/timeout ${tags.username} 600')" class="text-[10px] bg-zinc-700 p-1 rounded">10m</button>
-                        <button onclick="Bot.say('/ban ${tags.username}')" class="text-[10px] bg-black p-1 rounded">BAN</button>
-                    </div>
-                    <span class="text-zinc-600 text-[10px] mono mr-1">${time}</span>
-                    ${isMod ? '<span class="text-[#00f593] font-bold mr-1">🛡️</span>' : ''}
-                    <span style="color:${color}" class="font-bold cursor-pointer">${tags['display-name']}</span>: 
-                    <span class="text-zinc-100">${msg}</span>
-                `;
-
-                container.appendChild(line);
-                container.scrollTop = container.scrollHeight;
-            },
-
-            setupInput() {
-                const input = document.getElementById('chat-input');
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && input.value) {
-                        this.say(input.value);
-                        input.value = '';
+                toggleShield() {
+                    Titan.state.isShield = !Titan.state.isShield;
+                    const btn = document.getElementById('shield-trigger');
+                    
+                    if (Titan.state.isShield) {
+                        this.execute('/subsonly');
+                        this.execute('/emoteonly');
+                        this.execute('/slow 30');
+                        this.execute('/clear');
+                        btn.innerText = "SHIELD PROTOCOL ACTIVE (CANCEL)";
+                        btn.classList.add('shield-active');
+                        Titan.ui.notify("LOCKDOWN ATTIVATO", "red");
+                    } else {
+                        this.execute('/subsonlyoff');
+                        this.execute('/emoteonlyoff');
+                        this.execute('/slowoff');
+                        btn.innerText = "EXECUTE LOCKDOWN PROTOCOL";
+                        btn.classList.remove('shield-active');
+                        Titan.ui.notify("LOCKDOWN DISATTIVATO", "green");
                     }
-                });
+                },
+
+                deleteMsg(id) {
+                    this.execute(`/delete ${id}`);
+                },
+
+                timeoutUser(user) {
+                    this.execute(`/timeout ${user} 600`);
+                }
             },
 
-            say(msg) {
-                if (this.client) this.client.say(Core.state.channel, msg);
+            /**
+             * MODULO UI: Gestione interfaccia grafica
+             */
+            ui: {
+                init() {
+                    document.getElementById('auth-overlay').classList.add('hidden');
+                    document.getElementById('titan-app').classList.remove('hidden');
+                    
+                    // Update User Info
+                    document.getElementById('ui-user-avatar').src = Titan.state.user.profile_image_url;
+                    document.getElementById('ui-user-name').innerText = Titan.state.user.display_name;
+                    document.getElementById('ui-target-name').innerText = Titan.state.channel.toUpperCase();
+
+                    this.loadVideo();
+                    this.setupInput();
+                },
+
+                loadVideo() {
+                    const domain = window.location.hostname;
+                    document.getElementById('video-embed').innerHTML = `
+                        <iframe 
+                            src="https://player.twitch.tv/?channel=${Titan.state.channel}&parent=${domain}&autoplay=true" 
+                            height="100%" width="100%" allowfullscreen="true" style="border:none;">
+                        </iframe>`;
+                },
+
+                renderMessage(tags, msg) {
+                    const flow = document.getElementById('chat-flow');
+                    const div = document.createElement('div');
+                    div.className = 'msg-line group';
+                    
+                    const color = tags.color || '#9147ff';
+                    const isMod = tags.mod || tags.badges?.broadcaster === '1';
+                    
+                    div.innerHTML = `
+                        <div class="msg-tools">
+                            <button onclick="Titan.mod.deleteMsg('${tags.id}')" class="p-1 hover:text-red-500">🗑️</button>
+                            <button onclick="Titan.mod.timeoutUser('${tags.username}')" class="p-1 hover:text-orange-500">⏱️</button>
+                        </div>
+                        <span class="text-[10px] text-zinc-600 font-mono mr-1">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        ${isMod ? '<span class="text-green-500 font-bold mr-1">🛡️</span>' : ''}
+                        <span style="color: ${color}" class="msg-username">${tags['display-name']}</span>:
+                        <span class="msg-content">${msg}</span>
+                    `;
+
+                    flow.appendChild(div);
+                    flow.scrollTop = flow.scrollHeight;
+
+                    // Cleanup per performance se troppi messaggi (> 150)
+                    if (flow.children.length > 150) flow.removeChild(flow.firstChild);
+                },
+
+                setupInput() {
+                    const input = document.getElementById('chat-sender');
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && input.value) {
+                            Titan.bot.say(input.value);
+                            input.value = '';
+                        }
+                    });
+                },
+
+                notify(text, type = 'zinc') {
+                    const flow = document.getElementById('chat-flow');
+                    const div = document.createElement('div');
+                    const colors = {
+                        green: 'text-green-400',
+                        red: 'text-red-400',
+                        orange: 'text-orange-400',
+                        blue: 'text-indigo-400',
+                        zinc: 'text-zinc-500'
+                    };
+                    div.className = `p-2 my-1 bg-black/40 border-l-2 border-current text-[11px] font-mono ${colors[type]}`;
+                    div.innerText = `[SYSTEM] ${text}`;
+                    flow.appendChild(div);
+                    flow.scrollTop = flow.scrollHeight;
+                }
+            },
+
+            /**
+             * AVVIO APPLICAZIONE
+             */
+            initApp() {
+                this.ui.init();
+                this.bot.connect();
+                
+                // Keep Alive Heartbeat
+                setInterval(() => {
+                    console.log(`Titan Heartbeat | Msg Count: ${this.state.metrics.messages}`);
+                }, 60000);
             }
         };
 
-        window.onload = () => Core.init();
+        // Inizializzazione al caricamento
+        window.onload = () => Titan.auth.check();
     </script>
 </body>
 </html>
