@@ -3,666 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Onyx | Professional Twitch Operation Center</title>
-    
+    <title>ONYX TITAN | Professional ModView</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-core: #09090b;
-            --bg-panel: #18181b;
-            --bg-element: #27272a;
-            --border: #3f3f46;
-            --accent: #6366f1; /* Indigo 500 */
-            --accent-hover: #4f46e5;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-            --text-main: #f4f4f5;
-            --text-muted: #a1a1aa;
+            --bg-black: #0e0e10;
+            --bg-light: #18181b;
+            --bg-panel: #1f1f23;
+            --twitch-purple: #9147ff;
+            --border-color: #303032;
+            --text-main: #efeff1;
+            --text-muted: #adadb8;
         }
 
-        /* Reset & Base */
-        * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--border) var(--bg-core); }
         body {
-            background-color: var(--bg-core);
+            background-color: var(--bg-black);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
             height: 100vh;
-            width: 100vw;
+            margin: 0;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Scrollbar Webkit */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-core); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-        /* Utility Classes */
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .hidden { display: none !important; }
-        .flex-center { display: flex; align-items: center; justify-content: center; }
-        
-        /* Layout Grid */
-        .dashboard-grid {
+        /* Layout Grid simile alla ModView di Twitch */
+        .modview-grid {
             display: grid;
-            grid-template-columns: 260px 1fr 400px; /* Sidebar | Stream | Chat */
-            grid-template-rows: 60px 1fr 250px;     /* Header | Main | Bottom Tools */
+            grid-template-columns: 50px 1fr 340px;
+            grid-template-rows: 50px 1fr 300px;
             height: 100vh;
-            width: 100vw;
         }
 
-        /* Specific Areas */
-        .area-header { grid-column: 1 / -1; grid-row: 1; border-bottom: 1px solid var(--border); background: var(--bg-panel); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 50; }
-        .area-sidebar { grid-column: 1; grid-row: 2 / -1; border-right: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; }
-        .area-stream { grid-column: 2; grid-row: 2; background: #000; position: relative; }
-        .area-logs { grid-column: 2; grid-row: 3; border-top: 1px solid var(--border); background: var(--bg-panel); overflow: hidden; display: flex; flex-direction: column; }
-        .area-chat { grid-column: 3; grid-row: 2 / -1; border-left: 1px solid var(--border); background: var(--bg-panel); display: flex; flex-direction: column; }
-
-        /* UI Components */
-        .btn {
-            background: var(--element);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            justify-content: center;
-        }
-        .btn:hover { background: var(--border); }
-        .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-danger { background: rgba(239, 68, 68, 0.1); border-color: var(--danger); color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: white; }
-        .btn-icon { padding: 8px; width: 36px; height: 36px; }
-
-        .input-field {
-            background: var(--bg-core);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 10px 12px;
-            border-radius: 4px;
-            outline: none;
-            font-size: 13px;
-            width: 100%;
-            transition: border-color 0.2s;
-        }
-        .input-field:focus { border-color: var(--accent); }
-
-        /* Chat Specifics */
-        .chat-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
-        .chat-message {
-            padding: 6px 8px;
-            border-radius: 4px;
-            font-size: 13px;
-            line-height: 1.5;
-            position: relative;
-            border-left: 2px solid transparent;
-        }
-        .chat-message:hover { background: rgba(255,255,255,0.03); border-left-color: var(--accent); }
+        .top-bar { grid-column: 1 / -1; background: var(--bg-light); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; }
+        .side-nav { grid-column: 1; background: var(--bg-light); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 20px; }
         
-        /* Inline Mod Tools */
-        .mod-actions-overlay {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--bg-element);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 2px;
-            display: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 10;
-        }
-        .chat-message:hover .mod-actions-overlay { display: flex; gap: 2px; }
+        /* Pannelli Rettangolari */
+        .panel { background: var(--bg-panel); border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .panel-header { background: var(--bg-light); padding: 8px 12px; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         
-        .mod-action-btn {
-            width: 24px; height: 24px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .mod-action-btn:hover { background: var(--border); }
-        .mod-action-btn.delete:hover { background: var(--danger); color: white; }
-        .mod-action-btn.timeout:hover { background: var(--warning); color: black; }
-        .mod-action-btn.ban:hover { background: black; color: white; border: 1px solid white; }
+        .main-stream { grid-column: 2; grid-row: 2; margin: 5px; }
+        .chat-section { grid-column: 3; grid-row: 2 / 4; margin: 5px; margin-left: 0; }
+        .mod-actions { grid-column: 2; grid-row: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 5px; margin-top: 0; }
 
-        /* Login Overlay */
-        #login-screen {
-            position: fixed; inset: 0; z-index: 999;
-            background: radial-gradient(circle at center, #1f1f23 0%, #09090b 100%);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .login-card {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            padding: 48px;
-            border-radius: 12px;
-            width: 450px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
+        /* Chat Styling */
+        #chat-container { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+        .chat-line { position: relative; padding: 4px 8px; border-radius: 2px; }
+        .chat-line:hover { background: rgba(255,255,255,0.05); }
+        .chat-line .tools { display: none; position: absolute; right: 5px; top: 5px; background: var(--bg-light); border: 1px solid var(--border-color); padding: 2px; gap: 4px; z-index: 50; }
+        .chat-line:hover .tools { display: flex; }
 
-        /* Animations */
-        @keyframes pulse-dot { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: inline-block; animation: pulse-dot 1.5s infinite; }
+        /* Buttons */
+        .action-btn { background: #35353b; color: white; border-radius: 4px; padding: 8px; font-size: 12px; font-weight: 600; text-align: left; transition: 0.2s; }
+        .action-btn:hover { background: #464649; }
+        .btn-purple { background: var(--twitch-purple); }
+        .btn-purple:hover { background: #772ce8; }
+        .btn-danger { color: #ff4a4a; border: 1px solid #ff4a4a; background: transparent; }
+        .btn-danger:hover { background: #ff4a4a; color: white; }
+
+        /* Inputs */
+        .chat-input-area { padding: 10px; background: var(--bg-light); border-top: 1px solid var(--border-color); }
+        .twitch-input { width: 100%; background: #0e0e10; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px; color: white; outline: none; font-size: 13px; }
+        .twitch-input:focus { border-color: var(--twitch-purple); }
+
+        /* Overlays */
+        #login-overlay { position: fixed; inset: 0; background: var(--bg-black); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .hidden { display: none !important; }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .dot-green { background: #00f593; box-shadow: 0 0 10px #00f593; }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #39393d; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-card">
-            <div class="flex justify-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span class="text-3xl font-bold text-white">Ox</span>
+    <div id="login-overlay">
+        <div class="p-10 border border-[#303032] bg-[#18181b] rounded-lg text-center shadow-2xl max-w-md">
+            <div class="mb-6 flex justify-center">
+                <div class="w-12 h-12 bg-[#9147ff] rounded-lg flex items-center justify-center shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
                 </div>
             </div>
-            <h1 class="text-2xl font-bold mb-2">Onyx Dashboard</h1>
-            <p class="text-gray-400 text-sm mb-8">Advanced Twitch Moderation Environment</p>
-            
-            <button onclick="Auth.login()" class="w-full bg-[#6441a5] hover:bg-[#503484] text-white font-bold py-3 px-4 rounded transition flex items-center justify-center gap-3">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
-                Connect via Twitch
-            </button>
-            <div id="auth-status" class="mt-4 text-xs text-gray-500 mono hidden">Initializing OAuth Handshake...</div>
+            <h1 class="text-2xl font-bold mb-2">SerowMOD Titan</h1>
+            <p class="text-gray-400 text-sm mb-8">Professional Moderation Interface</p>
+            <button onclick="Core.login()" class="w-full bg-[#9147ff] hover:bg-[#772ce8] text-white py-3 rounded font-bold transition">CONNETTI TWITCH</button>
+            <div id="auth-info" class="mt-4 text-[10px] font-mono text-gray-600">Checking redirect state...</div>
         </div>
     </div>
 
-    <div id="app-root" class="dashboard-grid hidden">
+    <div id="main-view" class="modview-grid hidden">
         
-        <header class="area-header">
+        <header class="top-bar">
             <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold">Ox</div>
-                    <span class="font-bold tracking-wide">ONYX</span>
-                </div>
-                <div class="h-6 w-px bg-gray-700 mx-2"></div>
-                <div class="flex items-center gap-2 text-sm text-gray-400">
-                    <span>Target:</span>
-                    <span id="target-channel-display" class="text-white font-bold mono">---</span>
-                </div>
+                <span class="font-bold text-sm tracking-tighter">TITAN <span class="text-[#9147ff]">VIEW</span></span>
+                <div class="h-4 w-px bg-zinc-700"></div>
+                <div class="text-xs text-zinc-400">Canale: <span id="display-channel" class="text-white font-bold">---</span></div>
             </div>
-
-            <div class="flex items-center gap-6">
-                <div id="connection-status" class="flex items-center gap-2 text-xs font-bold text-red-500">
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span> DISCONNECTED
-                </div>
-                <div class="flex items-center gap-3 pl-6 border-l border-gray-700">
-                    <img id="user-avatar" src="" class="w-8 h-8 rounded bg-gray-800">
-                    <div class="flex flex-col">
-                        <span id="user-name" class="text-xs font-bold leading-none mb-1">Guest</span>
-                        <span class="text-[10px] text-gray-500 mono leading-none">MODERATOR</span>
-                    </div>
-                    <button onclick="Auth.logout()" class="ml-2 text-gray-500 hover:text-white transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    </button>
-                </div>
+            <div class="flex items-center gap-4">
+                <div class="text-xs flex items-center"><span class="status-dot dot-green"></span> SESSIONE ATTIVA</div>
+                <img id="user-pfp" src="" class="w-7 h-7 rounded border border-zinc-700">
+                <button onclick="location.reload()" class="text-zinc-500 hover:text-white">✕</button>
             </div>
         </header>
 
-        <aside class="area-sidebar p-4 gap-4">
-            <div class="space-y-1">
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Quick Actions</div>
-                <button onclick="ModActions.run('/clear')" class="w-full btn justify-start text-xs">
-                    <span class="text-yellow-500">🧹</span> Clear Chat
-                </button>
-                <button onclick="ModActions.run('/subsonly')" class="w-full btn justify-start text-xs">
-                    <span class="text-purple-500">💎</span> Subs Only
-                </button>
-                <button onclick="ModActions.run('/emoteonly')" class="w-full btn justify-start text-xs">
-                    <span class="text-blue-500">😊</span> Emote Only
-                </button>
-                <button onclick="ModActions.run('/slow 10')" class="w-full btn justify-start text-xs">
-                    <span class="text-orange-500">🐢</span> Slow 10s
-                </button>
-            </div>
+        <nav class="side-nav">
+            <div class="p-2 bg-[#9147ff] rounded cursor-pointer">🛡️</div>
+            <div class="p-2 text-zinc-500 hover:text-white cursor-pointer">📊</div>
+            <div class="p-2 text-zinc-500 hover:text-white cursor-pointer">💬</div>
+            <div class="mt-auto mb-4 p-2 text-zinc-500 hover:text-white cursor-pointer">⚙️</div>
+        </nav>
 
-            <div class="h-px bg-gray-800 my-2"></div>
-
-            <div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Shield Protocol</div>
-                <button id="btn-shield" onclick="ModActions.toggleShield()" class="w-full btn btn-danger justify-center py-4 relative overflow-hidden group">
-                    <div class="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-10 transition"></div>
-                    <span class="relative z-10 flex items-center gap-2 font-bold">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        LOCKDOWN
-                    </span>
-                </button>
-                <p class="text-[10px] text-gray-500 mt-2 text-center">Subs Only + Emote Only + Clear + Slow 30s</p>
+        <section class="panel main-stream">
+            <div class="panel-header">
+                <span>STREAM</span>
+                <span class="text-[10px] text-zinc-500">LIVE PLAYER</span>
             </div>
-
-            <div class="mt-auto">
-                <div class="bg-gray-800 rounded p-3 text-xs">
-                    <div class="flex justify-between mb-1">
-                        <span class="text-gray-400">Session Uptime</span>
-                        <span id="uptime-clock" class="mono text-white">00:00:00</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-400">Events Logged</span>
-                        <span id="event-counter" class="mono text-indigo-400">0</span>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <main class="area-stream flex items-center justify-center">
-            <div id="video-placeholder" class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                <p class="text-gray-400 text-sm">Waiting for Channel Selection...</p>
-            </div>
-            <div id="video-embed-container" class="w-full h-full hidden">
-                </div>
-            
-            <div class="absolute top-4 right-4 bg-black/80 backdrop-blur px-3 py-1 rounded text-xs font-bold flex items-center gap-2 border border-white/10">
-                <span class="live-dot"></span> LIVE FEED
-            </div>
-        </main>
-
-        <section class="area-logs">
-            <div class="bg-gray-900 border-b border-gray-800 px-4 py-2 flex justify-between items-center">
-                <span class="text-xs font-bold text-gray-400 uppercase">Operation Logs</span>
-                <button onclick="Logs.clear()" class="text-[10px] text-gray-500 hover:text-white">CLEAR LOGS</button>
-            </div>
-            <div id="system-logs" class="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 select-text text-gray-300">
-                </div>
+            <div id="video-root" class="flex-1 bg-black"></div>
         </section>
 
-        <aside class="area-chat">
-            <div class="bg-gray-900 border-b border-gray-800 px-4 py-3 flex justify-between items-center shadow-sm z-10">
-                <span class="font-bold text-sm">Chat Feed</span>
-                <div class="flex items-center gap-2">
-                    <span id="chat-status-indicator" class="w-2 h-2 bg-gray-500 rounded-full"></span>
+        <div class="mod-actions">
+            <div class="panel">
+                <div class="panel-header">AZIONI RAPIDE</div>
+                <div class="p-3 grid grid-cols-2 gap-2 overflow-y-auto">
+                    <button onclick="Bot.say('/clear')" class="action-btn">🗑️ Clear Chat</button>
+                    <button onclick="Bot.say('/subsonly')" class="action-btn">💎 Subs Only</button>
+                    <button onclick="Bot.say('/emoteonly')" class="action-btn">😊 Emote Only</button>
+                    <button onclick="Bot.say('/slow 10')" class="action-btn">🐢 Slow 10s</button>
+                    <button onclick="Bot.say('/followers 10')" class="action-btn">👥 Follow 10m</button>
+                    <button onclick="Bot.say('/uniquechat')" class="action-btn">🚫 No Spam</button>
                 </div>
             </div>
-
-            <div id="chat-feed" class="chat-container">
-                <div class="text-center text-gray-500 text-sm mt-10 italic">Connecting to IRC...</div>
+            <div class="panel border-red-900/30">
+                <div class="panel-header text-red-500">MODALITÀ SCUDO</div>
+                <div class="p-4 flex flex-col justify-center h-full gap-4">
+                    <div class="bg-red-500/10 border border-red-500/20 p-3 rounded text-[11px] text-red-200">
+                        Attiva restrizioni massime istantanee per contrastare raid o spam pesante.
+                    </div>
+                    <button onclick="Core.toggleShield()" id="shield-btn" class="w-full py-4 rounded font-extrabold text-sm border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition">
+                        ATTIVA PROTOCOLLO SCUDO
+                    </button>
+                </div>
             </div>
+        </div>
 
-            <div class="p-4 bg-gray-900 border-t border-gray-800">
-                <form onsubmit="Chat.submit(event)" class="relative">
-                    <input type="text" id="message-input" class="input-field pr-16" placeholder="Send a message..." autocomplete="off">
-                    <button type="submit" class="absolute right-2 top-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 rounded font-bold">SEND</button>
-                </form>
+        <section class="panel chat-section">
+            <div class="panel-header">
+                <span>CHAT</span>
+                <span id="chat-count" class="text-[10px] text-[#9147ff]">CONNESSA</span>
             </div>
-        </aside>
+            <div id="chat-container"></div>
+            <div class="chat-input-area">
+                <div class="text-[10px] text-zinc-500 mb-1 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    Visibile solo ai moderatori
+                </div>
+                <input type="text" id="chat-input" class="twitch-input" placeholder="Invia un messaggio...">
+            </div>
+        </section>
 
     </div>
 
     <script>
         /**
-         * ONYX CORE CONFIGURATION
-         * Centralized settings for easy deployment.
+         * CORE LOGIC - TITAN ENGINE
          */
-        const Config = {
-            clientID: 'uqf5d6at2fnet8w5tylz17l2sb4onx',
-            redirectURI: 'https://serowsour.github.io/aabot/', // CHANGE THIS IF LOCALHOST
-            scope: 'chat:read chat:edit channel:moderate user:read:email moderator:manage:banned_users',
-            parentDomain: window.location.hostname === 'localhost' ? 'localhost' : 'serowsour.github.io'
-        };
+        const Core = {
+            config: {
+                clientId: 'uqf5d6at2fnet8w5tylz17l2sb4onx',
+                // Redirect intelligente
+                redirectUri: window.location.origin + window.location.pathname,
+                scopes: [
+                    'chat:read', 'chat:edit', 
+                    'channel:moderate', 
+                    'moderator:manage:chat_settings',
+                    'moderator:manage:banned_users',
+                    'user:read:email'
+                ].join(' ')
+            },
+            state: {
+                token: null,
+                user: null,
+                channel: null,
+                isShield: false
+            },
 
-        /**
-         * STATE MANAGEMENT
-         * Handles the runtime data of the application.
-         */
-        const State = {
-            token: null,
-            user: null,
-            targetChannel: null,
-            client: null,
-            isShieldActive: false,
-            logsCount: 0,
-            startTime: Date.now()
-        };
-
-        /**
-         * AUTHENTICATION MODULE
-         * Manages Twitch OAuth2 flow and User Data retrieval.
-         */
-        const Auth = {
             init() {
                 const hash = window.location.hash;
                 if (hash.includes('access_token')) {
-                    document.getElementById('auth-status').classList.remove('hidden');
                     const params = new URLSearchParams(hash.substring(1));
-                    State.token = params.get('access_token');
-                    
-                    // Clean URL
+                    this.state.token = params.get('access_token');
                     window.history.pushState({}, document.title, window.location.pathname);
-                    
-                    this.validateToken();
+                    this.bootstrap();
                 }
             },
 
             login() {
-                const url = `https://id.twitch.tv/oauth2/authorize?client_id=${Config.clientID}&redirect_uri=${encodeURIComponent(Config.redirectURI)}&response_type=token&scope=${encodeURIComponent(Config.scope)}`;
-                window.location.href = url;
+                const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${this.config.clientId}&redirect_uri=${encodeURIComponent(this.config.redirectUri)}&response_type=token&scope=${encodeURIComponent(this.config.scopes)}`;
+                window.location.href = authUrl;
             },
 
-            logout() {
-                State.token = null;
-                window.location.reload();
-            },
-
-            async validateToken() {
+            async bootstrap() {
+                document.getElementById('auth-info').innerText = "Validazione credenziali...";
                 try {
-                    Logs.add('System', 'Validating Token with Helix API...');
-                    const response = await fetch('https://api.twitch.tv/helix/users', {
-                        headers: {
-                            'Authorization': `Bearer ${State.token}`,
-                            'Client-ID': Config.clientID
-                        }
+                    const resp = await fetch('https://api.twitch.tv/helix/users', {
+                        headers: { 'Authorization': `Bearer ${this.state.token}`, 'Client-ID': this.config.clientId }
                     });
+                    const data = await resp.json();
+                    this.state.user = data.data[0];
 
-                    if (!response.ok) throw new Error('Token Invalid');
-
-                    const data = await response.json();
-                    State.user = data.data[0];
-                    
-                    this.completeLogin();
-                } catch (error) {
-                    console.error(error);
-                    alert("Authentication Failed. Please login again.");
-                    this.logout();
-                }
-            },
-
-            completeLogin() {
-                // UI Transition
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-root').classList.remove('hidden');
-                document.getElementById('app-root').style.display = 'grid'; // Ensure grid layout
-                
-                // Set User Info
-                document.getElementById('user-avatar').src = State.user.profile_image_url;
-                document.getElementById('user-name').innerText = State.user.display_name;
-
-                // Prompt for Channel
-                setTimeout(() => {
-                    const channel = prompt("ENTER TARGET CHANNEL NAME (CASE INSENSITIVE):");
-                    if (channel) {
-                        State.targetChannel = channel.toLowerCase().trim();
-                        App.start();
-                    } else {
-                        this.logout();
+                    const target = prompt("Canale da monitorare (es: serowsour):");
+                    if (target) {
+                        this.state.channel = target.toLowerCase().trim();
+                        this.launchUI();
                     }
-                }, 500);
-            }
-        };
-
-        /**
-         * APP CONTROLLER
-         * Orchestrates the initialization of sub-systems.
-         */
-        const App = {
-            start() {
-                document.getElementById('target-channel-display').innerText = State.targetChannel.toUpperCase();
-                
-                // Initialize Systems
-                Video.load();
-                Chat.connect();
-                Logs.add('System', `Initializing Onyx for channel: ${State.targetChannel}`);
-                
-                // Start Timer
-                setInterval(() => {
-                    const diff = Date.now() - State.startTime;
-                    const date = new Date(diff);
-                    const str = date.toISOString().substring(11, 19);
-                    document.getElementById('uptime-clock').innerText = str;
-                }, 1000);
-            }
-        };
-
-        /**
-         * VIDEO MODULE
-         * Manages the Twitch Embed Player.
-         */
-        const Video = {
-            load() {
-                const container = document.getElementById('video-embed-container');
-                const placeholder = document.getElementById('video-placeholder');
-                
-                placeholder.classList.add('hidden');
-                container.classList.remove('hidden');
-                
-                container.innerHTML = `
-                    <iframe
-                        src="https://player.twitch.tv/?channel=${State.targetChannel}&parent=${Config.parentDomain}&autoplay=true&muted=false"
-                        height="100%"
-                        width="100%"
-                        allowfullscreen>
-                    </iframe>
-                `;
-            }
-        };
-
-        /**
-         * CHAT & TMI MODULE
-         * Handles IRC connection, message rendering, and commands.
-         */
-        const Chat = {
-            connect() {
-                State.client = new tmi.Client({
-                    options: { debug: false },
-                    connection: {
-                        secure: true,
-                        reconnect: true
-                    },
-                    identity: {
-                        username: State.user.login,
-                        password: `oauth:${State.token}`
-                    },
-                    channels: [State.targetChannel]
-                });
-
-                State.client.connect()
-                    .then(() => {
-                        this.updateStatus(true);
-                        Logs.add('Network', 'Connected to Twitch IRC Edge Server');
-                        document.getElementById('chat-feed').innerHTML = ''; // Clear loading msg
-                        this.addSystemMessage(`Welcome to #${State.targetChannel}. Onyx is ready.`);
-                    })
-                    .catch((err) => {
-                        this.updateStatus(false);
-                        Logs.add('Error', `Connection Failed: ${err}`);
-                    });
-
-                this.registerEvents();
-            },
-
-            updateStatus(connected) {
-                const badge = document.getElementById('connection-status');
-                const dot = document.getElementById('chat-status-indicator');
-                
-                if (connected) {
-                    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> ONLINE`;
-                    badge.classList.replace('text-red-500', 'text-green-500');
-                    dot.classList.replace('bg-gray-500', 'bg-green-500');
-                } else {
-                    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> DISCONNECTED`;
-                    badge.classList.replace('text-green-500', 'text-red-500');
-                    dot.classList.replace('bg-green-500', 'bg-red-500');
+                } catch (e) {
+                    alert("Errore critico Auth: " + e.message);
                 }
             },
 
-            registerEvents() {
-                State.client.on('message', (channel, tags, message, self) => {
-                    this.renderMessage(tags, message);
-                });
-
-                State.client.on('clearchat', () => {
-                    this.addSystemMessage('CAUTION: Chat Cleared by a Moderator.');
-                    Logs.add('ModAction', 'Chat Cleared');
-                });
-
-                State.client.on('ban', (channel, username, reason) => {
-                    Logs.add('Ban', `User ${username} banned. Reason: ${reason || 'N/A'}`);
-                });
-            },
-
-            renderMessage(tags, message) {
-                const feed = document.getElementById('chat-feed');
-                const div = document.createElement('div');
-                div.className = 'chat-message group';
+            launchUI() {
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('main-view').classList.remove('hidden');
+                document.getElementById('user-pfp').src = this.state.user.profile_image_url;
+                document.getElementById('display-channel').innerText = this.state.channel.toUpperCase();
                 
-                const isMod = tags.mod || tags.badges?.broadcaster === '1';
-                const color = tags.color || '#a1a1aa';
-                const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-
-                // Construct HTML
-                div.innerHTML = `
-                    <div class="mod-actions-overlay">
-                        <div class="mod-action-btn delete" onclick="ModActions.delete('${tags.id}')" title="Delete Message">🗑️</div>
-                        <div class="mod-action-btn timeout" onclick="ModActions.timeout('${tags.username}')" title="Timeout 10m">⏱️</div>
-                        <div class="mod-action-btn ban" onclick="ModActions.ban('${tags.username}')" title="Permaban">🚫</div>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-[10px] text-gray-500 mono">${time}</span>
-                        ${isMod ? '<span class="bg-gray-700 text-[9px] px-1 rounded text-white font-bold">MOD</span>' : ''}
-                        <span class="text-sm font-bold cursor-pointer hover:underline" style="color: ${color}" onclick="Chat.mention('${tags.username}')">${tags['display-name']}</span>
-                    </div>
-                    <div class="text-gray-300 break-words">${this.formatEmotes(message, tags.emotes)}</div>
+                // Embed Stream
+                const parent = window.location.hostname;
+                document.getElementById('video-root').innerHTML = `
+                    <iframe src="https://player.twitch.tv/?channel=${this.state.channel}&parent=${parent}&autoplay=true" height="100%" width="100%" allowfullscreen></iframe>
                 `;
 
-                feed.appendChild(div);
-                
-                // Auto Scroll
-                if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 100) {
-                    feed.scrollTop = feed.scrollHeight;
-                }
-            },
-
-            addSystemMessage(text) {
-                const feed = document.getElementById('chat-feed');
-                const div = document.createElement('div');
-                div.className = 'px-2 py-1 my-1 border-l-2 border-indigo-500 bg-indigo-500/10 text-xs text-indigo-200 font-mono';
-                div.innerText = `[SYSTEM] ${text}`;
-                feed.appendChild(div);
-                feed.scrollTop = feed.scrollHeight;
-            },
-
-            formatEmotes(message, emotes) {
-                // Simplified emote handling (pass-through for now to keep code light, can be expanded)
-                return message; 
-            },
-
-            submit(e) {
-                e.preventDefault();
-                const input = document.getElementById('message-input');
-                const msg = input.value;
-                if (msg && State.client) {
-                    State.client.say(State.targetChannel, msg);
-                    input.value = '';
-                    // Local Echo
-                    Logs.add('You', msg);
-                }
-            },
-
-            mention(username) {
-                const input = document.getElementById('message-input');
-                input.value = `@${username} ` + input.value;
-                input.focus();
-            }
-        };
-
-        /**
-         * MODERATION ACTIONS MODULE
-         * Handles execution of mod commands.
-         */
-        const ModActions = {
-            run(command) {
-                if (!State.client) return;
-                State.client.say(State.targetChannel, command);
-                Logs.add('Command', `Executed: ${command}`);
-            },
-
-            delete(msgId) {
-                this.run(`/delete ${msgId}`);
-                Logs.add('ModAction', `Deleted message ID: ...${msgId.substr(-4)}`);
-            },
-
-            timeout(user) {
-                if(confirm(`Timeout ${user} for 600 seconds?`)) {
-                    this.run(`/timeout ${user} 600`);
-                }
-            },
-
-            ban(user) {
-                if(confirm(`WARNING: Are you sure you want to BAN ${user}?`)) {
-                    this.run(`/ban ${user}`);
-                }
+                Bot.init();
             },
 
             toggleShield() {
-                State.isShieldActive = !State.isShieldActive;
-                const btn = document.getElementById('btn-shield');
-                
-                if (State.isShieldActive) {
-                    // Activate Shield
-                    this.run('/subsonly');
-                    this.run('/emoteonly');
-                    this.run('/slow 30');
-                    this.run('/clear');
-                    
-                    btn.classList.add('bg-red-600', 'animate-pulse');
-                    btn.innerHTML = `<span class="relative z-10 flex items-center gap-2 font-bold">⚠️ SHIELD ACTIVE</span>`;
-                    Chat.addSystemMessage('SHIELD MODE ENGAGED. Chat locked down.');
+                this.state.isShield = !this.state.isShield;
+                const btn = document.getElementById('shield-btn');
+                if (this.state.isShield) {
+                    Bot.say('/subsonly');
+                    Bot.say('/emoteonly');
+                    Bot.say('/slow 30');
+                    Bot.say('/clear');
+                    btn.classList.add('bg-red-600', 'text-white');
+                    btn.innerText = "SCUDO ATTIVO - DISATTIVA";
                 } else {
-                    // Deactivate
-                    this.run('/subsonlyoff');
-                    this.run('/emoteonlyoff');
-                    this.run('/slowoff');
-                    
-                    btn.classList.remove('bg-red-600', 'animate-pulse');
-                    btn.innerHTML = `<span class="relative z-10 flex items-center gap-2 font-bold"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>LOCKDOWN</span>`;
-                    Chat.addSystemMessage('Shield Mode disengaged. Restrictions lifted.');
+                    Bot.say('/subsonlyoff');
+                    Bot.say('/emoteonlyoff');
+                    Bot.say('/slowoff');
+                    btn.classList.remove('bg-red-600', 'text-white');
+                    btn.innerText = "ATTIVA PROTOCOLLO SCUDO";
                 }
             }
         };
 
-        /**
-         * LOGGING MODULE
-         * Displays system events and actions.
-         */
-        const Logs = {
-            add(source, message) {
-                const container = document.getElementById('system-logs');
-                const line = document.createElement('div');
-                const time = new Date().toLocaleTimeString();
-                
-                line.innerHTML = `<span class="text-gray-500">[${time}]</span> <span class="text-indigo-400 font-bold">${source}:</span> ${message}`;
-                container.prepend(line);
-                
-                // Cleanup old logs if too many
-                if (container.children.length > 100) {
-                    container.lastChild.remove();
-                }
+        const Bot = {
+            client: null,
 
-                State.logsCount++;
-                document.getElementById('event-counter').innerText = State.logsCount;
+            init() {
+                this.client = new tmi.Client({
+                    options: { debug: false },
+                    identity: {
+                        username: Core.state.user.login,
+                        password: `oauth:${Core.state.token}`
+                    },
+                    channels: [Core.state.channel]
+                });
+
+                this.client.connect().catch(console.error);
+                this.events();
+                this.setupInput();
             },
-            
-            clear() {
-                document.getElementById('system-logs').innerHTML = '';
+
+            events() {
+                this.client.on('message', (chan, tags, msg, self) => {
+                    this.renderMessage(tags, msg);
+                });
+            },
+
+            renderMessage(tags, msg) {
+                const container = document.getElementById('chat-container');
+                const line = document.createElement('div');
+                line.className = 'chat-line';
+                
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const color = tags.color || '#9147ff';
+                const isMod = tags.mod || tags.badges?.broadcaster === '1';
+
+                line.innerHTML = `
+                    <div class="tools">
+                        <button onclick="Bot.say('/delete ${tags.id}')" class="text-[10px] bg-red-900/50 p-1 rounded">DEL</button>
+                        <button onclick="Bot.say('/timeout ${tags.username} 600')" class="text-[10px] bg-zinc-700 p-1 rounded">10m</button>
+                        <button onclick="Bot.say('/ban ${tags.username}')" class="text-[10px] bg-black p-1 rounded">BAN</button>
+                    </div>
+                    <span class="text-zinc-600 text-[10px] mono mr-1">${time}</span>
+                    ${isMod ? '<span class="text-[#00f593] font-bold mr-1">🛡️</span>' : ''}
+                    <span style="color:${color}" class="font-bold cursor-pointer">${tags['display-name']}</span>: 
+                    <span class="text-zinc-100">${msg}</span>
+                `;
+
+                container.appendChild(line);
+                container.scrollTop = container.scrollHeight;
+            },
+
+            setupInput() {
+                const input = document.getElementById('chat-input');
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && input.value) {
+                        this.say(input.value);
+                        input.value = '';
+                    }
+                });
+            },
+
+            say(msg) {
+                if (this.client) this.client.say(Core.state.channel, msg);
             }
         };
 
-        // Initialize App on Load
-        window.onload = () => Auth.init();
-
+        window.onload = () => Core.init();
     </script>
 </body>
 </html>
